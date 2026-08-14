@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $BackupDirectory,
-    [string] $Bucket = 'athlete-files'
+    [string] $Bucket = 'athlete-files',
+    [Security.SecureString] $Passphrase
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,8 +46,37 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Falló el dump de esquema.' }
         & $cli db dump --linked --file (Join-Path $databaseRoot 'data.sql') --use-copy --data-only -x 'storage.buckets_vectors' -x 'storage.vector_indexes'
         if ($LASTEXITCODE -ne 0) { throw 'Falló el dump de datos.' }
-        & $cli storage cp -r "ss:///$Bucket" $storageRoot --experimental --linked
-        if ($LASTEXITCODE -ne 0) { throw 'Falló la copia privada de Storage.' }
+
+        $projectRef = (Get-Content -Raw (Join-Path $appRoot 'supabase/.temp/project-ref')).Trim()
+        $keyOutput = @(& $cli projects api-keys --project-ref $projectRef --output json)
+        if ($LASTEXITCODE -ne 0) { throw 'Falló la lectura de la clave administrativa de Storage.' }
+        $adminKey = @(($keyOutput -join "`n") | ConvertFrom-Json) |
+            Where-Object { $_.type -eq 'legacy' -and $_.name -eq 'service_role' -and $_.api_key -notmatch '\*' } |
+            Select-Object -First 1 -ExpandProperty api_key
+        if ([string]::IsNullOrWhiteSpace($adminKey)) {
+            throw 'Supabase no devolvió una clave service_role utilizable para el respaldo de Storage.'
+        }
+
+        $listOutput = @(& $cli storage ls --experimental --linked --recursive "ss:///$Bucket/")
+        if ($LASTEXITCODE -ne 0) { throw 'Falló el listado privado de Storage.' }
+        $listedPaths = @(($listOutput -join "`n") | ConvertFrom-Json).paths
+        foreach ($listedPath in $listedPaths) {
+            $segments = ([string]$listedPath).TrimStart('/') -split '/'
+            if ($segments.Count -lt 2 -or $segments[0] -ne $Bucket) {
+                throw 'Supabase devolvió una ruta de Storage fuera del bucket esperado.'
+            }
+            $relativeObjectPath = $segments[1..($segments.Count - 1)] -join '/'
+            $escapedObjectPath = ($segments[1..($segments.Count - 1)] |
+                ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
+            $destination = Join-Path $storageRoot "$Bucket/$relativeObjectPath"
+            [IO.Directory]::CreateDirectory((Split-Path -Parent $destination)) | Out-Null
+            Invoke-WebRequest `
+                -Uri "https://$projectRef.supabase.co/storage/v1/object/authenticated/$Bucket/$escapedObjectPath" `
+                -Headers @{ apikey = $adminKey; Authorization = "Bearer $adminKey" } `
+                -OutFile $destination `
+                -UseBasicParsing
+        }
+        Remove-Variable adminKey -ErrorAction SilentlyContinue
     }
     finally {
         Pop-Location
@@ -90,8 +120,10 @@ try {
         [IO.Compression.CompressionLevel]::Optimal,
         $false)
 
-    $passphrase = Read-Host 'Frase de cifrado del respaldo (mínimo 14 caracteres)' -AsSecureString
-    Protect-RunningPerformanceBackup -InputPath $archivePath -OutputPath $outputPath -Passphrase $passphrase
+    if ($null -eq $Passphrase) {
+        $Passphrase = Read-Host 'Frase de cifrado del respaldo (mínimo 14 caracteres)' -AsSecureString
+    }
+    Protect-RunningPerformanceBackup -InputPath $archivePath -OutputPath $outputPath -Passphrase $Passphrase
     $outputHash = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
     "$outputHash  $([IO.Path]::GetFileName($outputPath))" | Set-Content -LiteralPath "$outputPath.sha256" -Encoding ascii
     Write-Output "Respaldo cifrado creado fuera de Git: $outputPath"
