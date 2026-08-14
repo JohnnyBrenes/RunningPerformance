@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Garmin.FIT.Sdk" />
+  </ItemGroup>
+</Project>

@@ -39,6 +39,12 @@ quarantine/
 runtime/
 *.fit
 *.FIT
+# On case-insensitive filesystems, the patterns above also match this source
+# directory. Re-include only its source/lock files; bin/obj remain ignored.
+!src/backend/RunningPerformance.Fit/
+!src/backend/RunningPerformance.Fit/*.cs
+!src/backend/RunningPerformance.Fit/*.csproj
+!src/backend/RunningPerformance.Fit/packages.lock.json
 *.tcx
 *.TCX
 *.gpx
