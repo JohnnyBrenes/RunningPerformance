@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-ssr/
 .vite/
+.vercel/
 **/.tmp/
 supabase/.temp/
 supabase/.branches/

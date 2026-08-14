@@ -39,6 +39,19 @@ APP-013 no se considera terminada con la publicación del código. La aceptació
 
 La prueba de cifrado demuestra roundtrip y rechazo de manipulación. No equivale aún a una restauración completa de producción; esa evidencia permanece abierta.
 
+## Despliegue realizado el 2026-08-14
+
+- Commit de producción firmado: `da7a6b1b481e1631ee05b91c3ded54d694cbc41d` en `main`.
+- SPA Vercel Hobby: <https://running-performance.vercel.app>.
+- API + Worker en un único Render Free Web Service: <https://running-performance-api.onrender.com>.
+- Supabase Free `Running Performance`: migraciones `0000`–`0160` alineadas y conexión de Render mediante un login dedicado sin privilegios administrativos.
+- Supabase Auth usa <https://running-performance.vercel.app> como Site URL y permite únicamente <https://running-performance.vercel.app/recover> como redirección adicional; ya existe al menos un usuario de producción.
+- Respaldo inicial real de PostgreSQL + Storage privado cifrado y con SHA-256, conservado fuera de Git. La restauración aislada continúa pendiente.
+- Smoke público: Vercel `200`, `/health/live` `200`, `/health/ready` `200` y preflight CORS `204` limitado al origen exacto de Vercel.
+- `/recover` responde `200`, Vercel entrega HSTS/CSP, un origen ajeno no recibe permiso CORS y OpenAPI requiere autenticación en producción (`401`).
+- El bundle publicado contiene únicamente la URL y clave pública de Supabase; la clave administrativa y la cadena de base existen sólo en la configuración protegida de Render.
+- Los despliegues automáticos de Render y GitHub Actions permanecen desactivados; las verificaciones y publicaciones son manuales.
+
 ## Criterios MVP
 
 | # | Estado | Evidencia o pendiente |
@@ -56,11 +69,11 @@ La prueba de cifrado demuestra roundtrip y rechazo de manipulación. No equivale
 | 11 | verificado local | ajuste crea una versión nueva y auditable. |
 | 12 | verificado local | dashboard navega hasta fuentes y actividades. |
 | 13 | verificado local | contenido Git pasa escaneo, builds y pruebas locales; el repositorio público no usa GitHub Actions. |
-| 14 | parcial | procedimiento y criptografía probados; falta backup real y restauración completa en destino aislado. |
-| 15 | pendiente | falta publicar y comprobar GitHub/Vercel/Render/Supabase, sin tarjeta/trial y con costo obligatorio USD 0. |
+| 14 | parcial | backup real cifrado creado; falta restauración completa en un destino aislado. |
+| 15 | parcial | GitHub/Vercel/Render/Supabase publicados y comprobados; falta guardar evidencia sanitizada de planes y ausencia de cobro/trial. |
 | 16 | pendiente | requiere iPhone físico: añadir a inicio, icono/nombre, standalone, login y flujos conectados. |
 
-## Despliegue gratuito que debe comprobarse
+## Despliegue gratuito comprobado
 
 - [GitHub](https://docs.github.com/en/get-started/learning-about-github/githubs-plans): repositorio público usado sólo para alojar el código, sin GitHub Actions ni secretos personales en el contenido.
 - [Vercel Hobby](https://vercel.com/docs/plans/hobby): uso personal/no comercial, sin dominio comprado ni add-ons; el bundle está por debajo del límite de carga documentado.
@@ -86,7 +99,7 @@ El piloto comienza únicamente después de que frontend, backend y Supabase est�
 ## Cierre requerido
 
 1. Repetir todas las puertas locales sobre el commit exacto que se vaya a desplegar.
-2. Desplegar Supabase, Render y Vercel en planes genuinamente gratuitos y registrar URLs sanitizadas.
+2. ~~Desplegar Supabase, Render y Vercel en planes genuinamente gratuitos y registrar URLs sanitizadas.~~ Completado el 2026-08-14; queda la evidencia visual de costo.
 3. Crear backup cifrado real y restaurarlo en un destino vacío/aislado; validar DB, RLS, Storage y hashes.
 4. Ejecutar smoke de producción en Chrome/Edge y Safari de un iPhone real.
 5. Instalar desde “Añadir a pantalla de inicio”, abrir standalone y completar los flujos principales con conexión.

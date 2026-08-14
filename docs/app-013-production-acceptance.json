@@ -31,6 +31,41 @@
     "publishBoundaryGitIndex": "passed",
     "rateLimitSmoke": "passed"
   },
+  "productionDeployment": {
+    "deployedAt": "2026-08-14",
+    "commit": "da7a6b1b481e1631ee05b91c3ded54d694cbc41d",
+    "vercel": {
+      "plan": "hobby",
+      "url": "https://running-performance.vercel.app",
+      "smokeStatus": 200
+    },
+    "render": {
+      "plan": "free",
+      "url": "https://running-performance-api.onrender.com",
+      "autoDeploy": false,
+      "liveStatus": 200,
+      "readyStatus": 200,
+      "corsPreflightStatus": 204
+    },
+    "supabase": {
+      "plan": "free",
+      "migrationsThrough": "0160",
+      "dedicatedNonAdminLogin": true,
+      "initialEncryptedBackup": "created_outside_git",
+      "siteUrl": "https://running-performance.vercel.app",
+      "passwordRecoveryRedirect": "https://running-performance.vercel.app/recover",
+      "productionUserAvailable": true
+    },
+    "securitySmoke": {
+      "recoveryRouteStatus": 200,
+      "vercelHsts": true,
+      "vercelCsp": true,
+      "serviceSecretAbsentFromBundle": true,
+      "rogueCorsOriginAllowed": false,
+      "productionOpenApiStatus": 401
+    },
+    "billingEvidence": "pending_sanitized_provider_screenshots"
+  },
   "criteria": [
     { "id": 1, "status": "verified_local" },
     { "id": 2, "status": "verified_local" },
@@ -45,12 +80,12 @@
     { "id": 11, "status": "verified_local" },
     { "id": 12, "status": "verified_local" },
     { "id": 13, "status": "verified_local" },
-    { "id": 14, "status": "partial", "pending": "real encrypted backup and full isolated restore" },
-    { "id": 15, "status": "pending", "pending": "zero-cost production deployment and billing evidence" },
+    { "id": 14, "status": "partial", "pending": "full isolated restore", "evidence": "real encrypted database and private Storage backup created outside Git" },
+    { "id": 15, "status": "partial", "pending": "sanitized plan and billing evidence", "evidence": "production deployment and public smoke passed on GitHub, Vercel, Render and Supabase" },
     { "id": 16, "status": "pending", "pending": "physical iPhone add-to-home-screen and standalone smoke" }
   ],
   "pilot": {
-    "status": "not_started",
+    "status": "ready_to_start",
     "requiredConsecutiveDays": 7,
     "startsAfter": ["production_https", "initial_encrypted_backup"]
   },

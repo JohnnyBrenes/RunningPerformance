@@ -15,7 +15,7 @@ Este runbook opera el MVP en GitHub Free, Vercel Hobby, Render Free y Supabase F
 1. Ejecuta todas las puertas del README y `pwsh ./scripts/Test-PublishBoundary.ps1 -GitIndex` sobre el contenido exacto que se publicará.
 2. Crea un proyecto Supabase Free sin medio de pago y aplica, en orden, las migraciones de `supabase/migrations`.
 3. Confirma RLS, grants y aislamiento con las pruebas SQL antes de importar datos reales.
-4. En Render, crea el Blueprint desde `render.yaml`. Configura `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` y `CORS_ALLOWED_ORIGINS`; esta última contiene exclusivamente el origen HTTPS exacto de Vercel, sin ruta ni comodín.
+4. En Render, crea el Blueprint desde `render.yaml`. Configura `DATABASE_URL` con un login limitado de aplicación y agrega `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `CORS_ALLOWED_ORIGINS`; esta última contiene exclusivamente el origen HTTPS exacto de Vercel, sin ruta ni comodín. El secreto de Supabase se usa sólo en el backend para Storage privado.
 5. En Vercel Hobby, usa `src/web` como Root Directory y configura `VITE_API_BASE_URL`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
 6. Después de conocer la URL final de Vercel, actualiza `CORS_ALLOWED_ORIGINS` en Render y vuelve a desplegar. No uses el secreto de Supabase en el frontend.
 7. Verifica `/health/live`, `/health/ready`, cabeceras de seguridad, login, flujos principales y que OpenAPI no esté disponible en producción.
