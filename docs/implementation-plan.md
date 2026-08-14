@@ -1,8 +1,8 @@
 # Plan de implementación — Running Performance App
 
-**Versión:** `APP-004-v3-2026-08-14`  
+**Versión:** `APP-004-v4-2026-08-14`
 **Estado:** aprobado para ejecución incremental  
-**Contratos de entrada:** `APP-001-v5-2026-08-14`, `APP-002-v3-2026-08-12` y `APP-003-v3-2026-08-14`
+**Contratos de entrada:** `APP-001-v6-2026-08-14`, `APP-002-v3-2026-08-12` y `APP-003-v4-2026-08-14`
 
 ## 1. Resultado ejecutivo
 
@@ -41,23 +41,23 @@ La siguiente tarea es `APP-005`. No queda activada automáticamente por el cierr
 
 | Pieza | Decisión inicial |
 |---|---|
-| Repositorio y CI | GitHub Free; repositorio privado durante el desarrollo y publicación solo de `App/` |
+| Repositorio | GitHub Free público, publicación solo de `App/` y GitHub Actions deshabilitado |
 | Web | Vercel Hobby, SPA estática, assets y subdominio gratuito `vercel.app` |
 | API + Worker lógico | Un único Render Free Web Service Docker en Virginia; ASP.NET Core hospeda API y `BackgroundService` |
 | Datos | Supabase Free en `us-east-1` (North Virginia): Auth, PostgreSQL y Storage |
-| Integración | Segundo proyecto Supabase Free y servicio Render Free dormible; solo datos sintéticos |
+| Pruebas | Supabase CLI local y datos exclusivamente sintéticos; sin base alojada de integración |
 
-El perfil despliega dos artefactos: SPA y backend. El Worker sigue siendo un componente lógico con cola, lease y heartbeat PostgreSQL, pero en producción corre como `BackgroundService` dentro del proceso ASP.NET para no requerir un servicio de background pagado. `RunningPerformance.Worker` se conserva como host alternativo para local, CI y una futura separación explícitamente aprobada.
+El perfil despliega dos artefactos: SPA y backend. El Worker sigue siendo un componente lógico con cola, lease y heartbeat PostgreSQL, pero en producción corre como `BackgroundService` dentro del proceso ASP.NET para no requerir un servicio de background pagado. `RunningPerformance.Worker` se conserva como host alternativo local y para una futura separación explícitamente aprobada.
 
 Condiciones operativas:
 
 - Render Free dispone de 512 MB RAM y 0.1 CPU, duerme tras 15 minutos sin tráfico entrante y puede tardar cerca de un minuto en reactivarse. La UI muestra un estado de arranque y reintenta con backoff.
 - Mientras exista un job pendiente, la SPA consulta su estado por HTTP. Ese tráfico permite procesarlo fuera de la petición original. Si el navegador se cierra o el servicio reinicia/duerme, el lease vence y el job se recupera al siguiente despertar.
 - No se envían pings artificiales para impedir el sueño. `/health/live` y `/health/ready` sirven a despliegue y diagnóstico, no a evadir límites gratuitos.
-- Las 750 horas gratuitas mensuales de Render se comparten en el workspace. Integración permanece dormida salvo smoke tests y producción puede degradarse o pausarse antes de consumir la cuota.
+- Las 750 horas gratuitas mensuales de Render se comparten en el workspace y producción puede degradarse o pausarse antes de consumir la cuota.
 - Supabase Free permite como referencia 500 MB de base, 1 GB de Storage, 5 GB de egress y dos proyectos. Puede pausar un proyecto de baja actividad; el runbook incluye reactivación.
 - La aplicación alerta a 300 MB de base y bloquea nuevas importaciones FIT detalladas a 400 MB; alerta a 700 MB de Storage y bloquea nuevas cargas a 850 MB. Los originales existentes nunca se eliminan automáticamente.
-- GitHub Free privado limita Actions a 2,000 minutos y artifacts a 500 MB por mes. CI usa caché acotada, artefactos de retención corta y se detiene al agotar cuota; si el repositorio se hace público, los runners estándar siguen siendo gratuitos.
+- GitHub se usa únicamente para alojar el repositorio público; no se habilitan Actions.
 - Vercel Hobby se usa solo porque esta aplicación es personal y no comercial. Si cambia ese uso, la publicación se pausa hasta aprobar otra alternativa gratuita; no se asciende de plan automáticamente.
 - Logs de proveedor, health endpoints y el panel interno cubren observabilidad/alertas. No se introduce un monitor, servicio de correo o telemetría de pago.
 - No se registra método de pago ni se aceptan créditos de prueba. Agotar cualquier cuota produce advertencia, degradación, pausa o bloqueo; jamás un upgrade automático.
@@ -69,9 +69,7 @@ Cambiar de proveedor exige otra alternativa de costo obligatorio USD 0 y una dec
 
 | Entorno | Datos | Finalidad | Regla |
 |---|---|---|---|
-| local | sintéticos | desarrollo, Supabase CLI y pruebas | nunca copiar FIT, CSV, rutas o síntomas reales |
-| CI | sintéticos efímeros | build, pgTAP, integración y E2E | artefactos revisados y retención corta |
-| integration | sintéticos | smoke tests bajo demanda | segundo proyecto Supabase Free y Render dormible; previews Vercel sin backend persistente |
+| local | sintéticos | desarrollo, Supabase CLI, integración y E2E | nunca copiar FIT, CSV, rutas o síntomas reales |
 | production | reales privados | fuente de verdad cuando pase `G5` | tiers gratuitos, una cuenta, cuotas vigiladas y backup probado |
 
 La primera importación real ocurre en `APP-006`, después de `G1` y `G2`, y mantiene el CSV/FIT original como respaldo reproducible. La base no se declara fuente única hasta aprobar restauración en `I9`.
@@ -122,12 +120,12 @@ Antes de crear el lockfile, `I0` debe ejecutar una instalación limpia y comprob
 
 Entregables:
 
-- estructura `src/`, `tests/`, `supabase/`, `docs/` y `.github/workflows/` definida en APP-003;
+- estructura `src/`, `tests/`, `supabase/` y `docs/` definida en APP-003;
 - solución y proyectos .NET vacíos con referencias unidireccionales verificadas;
 - SPA Vite con router, tokens responsive y página de estado sintética;
-- Dockerfile de producción para API + Worker hospedado, Dockerfile/host alternativo para Worker local/CI, `.dockerignore`, archivos de versión y lockfiles;
+- Dockerfile de producción para API + Worker hospedado, host alternativo para Worker local, `.dockerignore`, archivos de versión y lockfiles;
 - OpenAPI generado en build y cliente TypeScript generado sin cambios manuales;
-- CI inicial con formato, lint, build, unit tests, secret scan, allowlist de archivos personales y presupuesto de minutos/artefactos GitHub Free;
+- scripts locales para formato, lint, build, pruebas, escaneo de secretos y allowlist de archivos personales;
 - `render.yaml` gratuito y configuración Vercel sin dominio comprado, add-ons ni auto-upgrade;
 - `.env.example` exclusivamente ficticio.
 
@@ -239,7 +237,7 @@ Entregables:
 - exportación versionada, job, objeto privado temporal y expiración;
 - solicitudes explícitas de archivo/eliminación sin saltarse auditoría;
 - límites de consultas y revisión de `activity_samples`.
-- guardas internas de consumo gratuito de base, Storage, egress, CI y horas de backend, con alertas preventivas fuera del dashboard cotidiano del atleta.
+- guardas internas de consumo gratuito de base, Storage, egress y horas de backend, con alertas preventivas fuera del dashboard cotidiano del atleta.
 
 Salida verificable: el atleta ve acciones prácticas de entrenamiento, puede recorrer su historial y descargar sus datos con autorización y vencimiento, sin URL pública; las operaciones administrativas quedan en Perfil.
 
@@ -323,7 +321,7 @@ Un incremento solo cierra cuando:
 2. incluye camino feliz, validaciones y pruebas negativas de propietario;
 3. conserva unidades, `NULL`, timestamps y procedencia según contrato;
 4. actualiza OpenAPI, cliente generado, migraciones y documentación;
-5. funciona con fixtures sintéticos en CI y no introduce datos personales;
+5. funciona localmente con fixtures sintéticos y no introduce datos personales;
 6. contempla loading/empty/error/pending/quarantine cuando aplique;
 7. pasa accesibilidad, 320/390 px y escritorio para toda UI nueva;
 8. deja logs y métricas operables sin payload sensible;
@@ -353,14 +351,14 @@ No se asignan fechas sin conocer capacidad real. Cada tarea puede dividirse si u
 |---|---|---|
 | Render duerme y corta trabajo en proceso | job persistente, lease vencible, polling visible y recuperación al despertar | un job se pierde o queda atascado tras suspensión/reinicio |
 | CPU/RAM gratuitas limitan FIT grandes | streaming, lotes acotados, límites de upload y medición con 512 MB/0.1 CPU | OOM, timeout o latencia inaceptable con fixture máximo |
-| Cuotas gratuitas se agotan | dashboard, umbrales preventivos y bloqueo sin billing | base 300/400 MB, Storage 700/850 MB, CI o 750 h se acercan al límite |
+| Cuotas gratuitas se agotan | dashboard, umbrales preventivos y bloqueo sin billing | base 300/400 MB, Storage 700/850 MB o 750 h se acercan al límite |
 | Supabase Free pausa y no ofrece backup descargable automático | reactivación documentada, dump/export cifrado local y restore ensayado | proyecto pausado o backup manual incumplido |
 | RLS contextual con pooling filtra identidad | `SET LOCAL`, transacción obligatoria y test de reutilización | cualquier consulta ocurre fuera de unidad de trabajo |
 | 45 tablas en un solo hito | series de migración y pgTAP por grupo | `db reset` deja de ser rápido/reproducible |
 | volumen de muestras FIT | COPY, índice por actividad/orden, medición y bloqueo preventivo | 300 MB de base o proyección hacia 400 MB |
-| deriva de contrato OpenAPI | generación determinista y diff CI | DTO manual o cliente editado |
+| deriva de contrato OpenAPI | generación determinista y diff local | DTO manual o cliente editado |
 | paquete reciente incompatible | lock exacto y smoke de peers en `I0` | requiere `--force`, preview o excepción de auditoría |
-| dato real llega a Git/CI | allowlist, secret/PII scan y revisión de primer commit | cualquier FIT/CSV/ruta/hash no sintético detectado |
+| dato real llega a Git o pruebas locales | allowlist, secret/PII scan y revisión de primer commit | cualquier FIT/CSV/ruta/hash no sintético detectado |
 
 ## 10. Fuentes oficiales verificadas
 
@@ -373,7 +371,6 @@ No se asignan fechas sin conocer capacidad real. Cada tarea puede dividirse si u
 - [npm: Vite](https://www.npmjs.com/package/vite)
 - [npm: Supabase JS](https://www.npmjs.com/package/@supabase/supabase-js)
 - [npm: Supabase CLI](https://www.npmjs.com/package/supabase)
-- [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
 - [Vercel Hobby](https://vercel.com/docs/plans/hobby)
 - [Render Free](https://render.com/docs/free)
 - [Render compute plans](https://render.com/docs/compute-plans)

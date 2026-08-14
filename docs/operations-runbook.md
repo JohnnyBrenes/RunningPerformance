@@ -4,7 +4,7 @@ Este runbook opera el MVP en GitHub Free, Vercel Hobby, Render Free y Supabase F
 
 ## Arquitectura operativa
 
-- GitHub contiene únicamente este repositorio público y ejecuta CI con permisos de lectura.
+- GitHub contiene únicamente este repositorio público. GitHub Actions está deshabilitado y todas las verificaciones se ejecutan localmente.
 - Vercel publica `src/web` como SPA HTTPS.
 - Render construye el `Dockerfile` y ejecuta API + Worker en un único Web Service Free.
 - Supabase Free ofrece Auth, PostgreSQL y el bucket privado `athlete-files`.
@@ -72,7 +72,7 @@ Después valida conteos, RLS con dos identidades sintéticas, descargas privadas
 ## Despliegue y rollback
 
 1. Crea un respaldo cifrado y registra el commit desplegado.
-2. Publica únicamente desde una revisión cuyo CI esté verde.
+2. Publica únicamente desde una revisión que haya pasado todas las puertas locales documentadas.
 3. Verifica readiness y los flujos de humo antes de importar o modificar datos.
 4. Si falla sólo la SPA, promueve el último deployment sano de Vercel.
 5. Si falla API + Worker, restaura el deployment sano anterior de Render o despliega el commit anterior conocido.
@@ -82,6 +82,6 @@ No reviertas una migración destructivamente ni sobrescribas originales para ace
 
 ## Piloto de siete días
 
-Cada día registra: acceso desde iPhone y PC, arranque frío, login, calendario/sesión, ejercicios, historial, captura subjetiva, dashboard, carga manual, Worker/readiness, ingestiones pendientes, cuarentena, cuotas de GitHub/Vercel/Render/Supabase y costo obligatorio observado. El día inicial y final deben incluir respaldo; al menos una restauración aislada debe quedar probada.
+Cada día registra: acceso desde iPhone y PC, arranque frío, login, calendario/sesión, ejercicios, historial, captura subjetiva, dashboard, carga manual, Worker/readiness, ingestiones pendientes, cuarentena, cuotas de Vercel/Render/Supabase y costo obligatorio observado. El día inicial y final deben incluir respaldo; al menos una restauración aislada debe quedar probada.
 
 La aceptación exige siete días consecutivos, costo obligatorio USD 0, smoke real en iPhone instalado como acceso de pantalla de inicio y una fuente de verdad operativa documentada. Una prueba automatizada WebKit ayuda, pero no sustituye el dispositivo físico.

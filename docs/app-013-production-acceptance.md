@@ -14,7 +14,7 @@ APP-013 no se considera terminada con la publicación del código. La aceptació
 - Frontend con CSP/HSTS en Vercel, reintentos acotados para red/`429`/`5xx` y mensaje visible de arranque frío.
 - `DATABASE_URL` compatible con formato clave-valor y URI PostgreSQL de producción, incluyendo credenciales URL-encoded.
 - Backup lógico de PostgreSQL + Storage privado, manifiestos SHA-256, cifrado autenticado fuera de Git y restauración que rechaza destinos no aislados por defecto.
-- Blueprint Render Free, configuración Vercel, CI de sólo lectura, SBOM npm, auditorías, contenedor no-root, licencia MIT y política de contribución privada-por-defecto.
+- Blueprint Render Free, configuración Vercel, verificación exclusivamente local, SBOM npm, auditorías, contenedor no-root, licencia MIT y política de contribución privada-por-defecto.
 - Runbook de despliegue, suspensión, incidentes, cuotas, secretos, backup, restauración y rollback.
 
 ## Evidencia ejecutada el 2026-08-14
@@ -55,14 +55,14 @@ La prueba de cifrado demuestra roundtrip y rechazo de manipulación. No equivale
 | 10 | verificado local | snapshot P1–P5 y decisión humana confirmada cubiertos. |
 | 11 | verificado local | ajuste crea una versión nueva y auditable. |
 | 12 | verificado local | dashboard navega hasta fuentes y actividades. |
-| 13 | preparado | contenido Git pasa escaneo, builds y pruebas; falta confirmar CI verde del repositorio remoto. |
+| 13 | verificado local | contenido Git pasa escaneo, builds y pruebas locales; el repositorio público no usa GitHub Actions. |
 | 14 | parcial | procedimiento y criptografía probados; falta backup real y restauración completa en destino aislado. |
 | 15 | pendiente | falta publicar y comprobar GitHub/Vercel/Render/Supabase, sin tarjeta/trial y con costo obligatorio USD 0. |
 | 16 | pendiente | requiere iPhone físico: añadir a inicio, icono/nombre, standalone, login y flujos conectados. |
 
 ## Despliegue gratuito que debe comprobarse
 
-- [GitHub](https://docs.github.com/en/get-started/learning-about-github/githubs-plans): repositorio público y Actions sin secretos personales en el contenido.
+- [GitHub](https://docs.github.com/en/get-started/learning-about-github/githubs-plans): repositorio público usado sólo para alojar el código, sin GitHub Actions ni secretos personales en el contenido.
 - [Vercel Hobby](https://vercel.com/docs/plans/hobby): uso personal/no comercial, sin dominio comprado ni add-ons; el bundle está por debajo del límite de carga documentado.
 - [Render Free](https://render.com/docs/free): un Web Service, filesystem efímero, suspensión/arranque frío esperados y 750 horas mensuales compartidas en el workspace.
 - [Supabase Free](https://supabase.com/pricing): Auth/PostgreSQL/Storage dentro de cuotas; los backups de base no contienen los objetos de Storage, que se copian aparte según la [documentación oficial](https://supabase.com/docs/guides/platform/backups).
@@ -85,7 +85,7 @@ El piloto comienza únicamente después de que frontend, backend y Supabase est�
 
 ## Cierre requerido
 
-1. Confirmar CI verde del primer push.
+1. Repetir todas las puertas locales sobre el commit exacto que se vaya a desplegar.
 2. Desplegar Supabase, Render y Vercel en planes genuinamente gratuitos y registrar URLs sanitizadas.
 3. Crear backup cifrado real y restaurarlo en un destino vacío/aislado; validar DB, RLS, Storage y hashes.
 4. Ejecutar smoke de producción en Chrome/Edge y Safari de un iPhone real.

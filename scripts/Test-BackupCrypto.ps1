@@ -15,7 +15,7 @@ try {
     $encrypted = Join-Path $temporaryRoot 'synthetic.rpbak'
     $restored = Join-Path $temporaryRoot 'restored.bin'
     [IO.File]::WriteAllBytes($source, [Security.Cryptography.RandomNumberGenerator]::GetBytes(2MB + 137))
-    $passphrase = ConvertTo-SecureString 'synthetic-passphrase-for-ci' -AsPlainText -Force
+    $passphrase = ConvertTo-SecureString 'synthetic-passphrase-for-local-test' -AsPlainText -Force
     Protect-RunningPerformanceBackup $source $encrypted $passphrase
     Unprotect-RunningPerformanceBackup $encrypted $restored $passphrase
     if ((Get-FileHash $source -Algorithm SHA256).Hash -ne (Get-FileHash $restored -Algorithm SHA256).Hash) {

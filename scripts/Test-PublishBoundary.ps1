@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $appRoot = Split-Path -Parent $PSScriptRoot
-$ignoredDirectories = @('node_modules', 'bin', 'obj', 'dist', 'coverage', 'TestResults', '.temp')
+$ignoredDirectories = @('.git', 'node_modules', 'bin', 'obj', 'dist', 'coverage', 'TestResults', '.temp')
 $forbiddenExtensions = @('.fit', '.tcx', '.gpx', '.csv', '.dump', '.bak', '.pfx', '.p12', '.pem', '.key')
 
 if ($GitIndex) {
@@ -14,11 +14,11 @@ if ($GitIndex) {
         throw '-GitIndex requires App to be an initialized Git worktree.'
     }
     $files = @(git -C $appRoot ls-files --cached | ForEach-Object {
-        Get-Item -LiteralPath (Join-Path $appRoot $_)
+        Get-Item -Force -LiteralPath (Join-Path $appRoot $_)
     })
 }
 else {
-    $files = Get-ChildItem $appRoot -Recurse -File | Where-Object {
+    $files = Get-ChildItem $appRoot -Force -Recurse -File | Where-Object {
         $relative = [IO.Path]::GetRelativePath($appRoot, $_.FullName)
         -not ($ignoredDirectories | Where-Object { $relative -match "(^|[\\/])$([regex]::Escape($_))([\\/]|$)" })
     }

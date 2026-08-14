@@ -6,9 +6,9 @@ La interfaz será mobile-first y estará verificada tanto en Safari para iPhone 
 
 ## Estado
 
-`APP-006` a `APP-012` entregan importación histórica CSV, ingestión FIT incremental, acceso y shell responsive, perfil/contexto de salud, carreras con metas versionadas, catálogo técnico, plan semanal inmutable, relación planificado–realizado, evaluación P1–P5, dashboard práctico, historial navegable y gestión privada de datos. `APP-013` está en aceptación de producción: el endurecimiento y las puertas locales están implementados, mientras que el despliegue, la restauración aislada, la verificación física en iPhone y el piloto de siete días permanecen pendientes. El perfil elige automáticamente ilustraciones masculinas o femeninas sin cambiar la prescripción. El esquema nace desde migraciones SQL con 45 tablas, nueve vistas, RLS forzada, Storage privado, dos cuentas sintéticas y guardas internas de cuota. La API y el Worker lógico comparten un único contenedor de producción; el proyecto Worker independiente queda disponible para pruebas locales/CI y evolución futura.
+`APP-006` a `APP-012` entregan importación histórica CSV, ingestión FIT incremental, acceso y shell responsive, perfil/contexto de salud, carreras con metas versionadas, catálogo técnico, plan semanal inmutable, relación planificado–realizado, evaluación P1–P5, dashboard práctico, historial navegable y gestión privada de datos. `APP-013` está en aceptación de producción: el endurecimiento y las puertas locales están implementados, mientras que el despliegue, la restauración aislada, la verificación física en iPhone y el piloto de siete días permanecen pendientes. El perfil elige automáticamente ilustraciones masculinas o femeninas sin cambiar la prescripción. El esquema nace desde migraciones SQL con 45 tablas, nueve vistas, RLS forzada, Storage privado, dos cuentas sintéticas y guardas internas de cuota. La API y el Worker lógico comparten un único contenedor de producción; el proyecto Worker independiente queda disponible para pruebas locales y evolución futura.
 
-La publicación completa debe conservar costo obligatorio USD 0: GitHub Free para repositorio/CI, Vercel Hobby para la SPA, un Render Free Web Service para API + Worker hospedado y Supabase Free para Auth/PostgreSQL/Storage. No se permiten tarjeta, pruebas temporales, add-ons, dominio comprado ni auto-upgrade; las cuotas se vigilan y bloquean antes de generar cobros.
+La publicación completa debe conservar costo obligatorio USD 0: GitHub Free aloja únicamente el repositorio, Vercel Hobby publica la SPA, un Render Free Web Service ejecuta API + Worker hospedado y Supabase Free aporta Auth/PostgreSQL/Storage. GitHub Actions está deshabilitado y todas las puertas se ejecutan localmente. No se permiten tarjeta, pruebas temporales, add-ons, dominio comprado ni auto-upgrade; las cuotas se vigilan y bloquean antes de generar cobros.
 
 ## Acceso desde la pantalla de inicio del iPhone
 
@@ -72,7 +72,7 @@ npm --prefix src/web run build
 docker build --tag running-performance-api:local .
 ```
 
-Por política del proyecto, las pruebas PostgreSQL/Supabase, el aislamiento de Storage y Playwright permanecen locales: GitHub Actions no sustituye una base de integración alojada. Deben ejecutarse en esta pila sintética antes de cada despliegue. El CI remoto se limita a build, formato, pruebas sin infraestructura externa, frontend, auditorías, contratos y contenedor.
+Por política del proyecto, toda verificación permanece local, incluidas las pruebas PostgreSQL/Supabase, el aislamiento de Storage, Playwright, builds, formato, auditorías, contratos y contenedor. No existe una base Supabase alojada de integración ni se usan GitHub Actions. Durante el desarrollo se ejecutan las pruebas afectadas por cada cambio; la suite completa con datos sintéticos se reserva para una entrega o despliegue.
 
 Supabase expone API en `http://127.0.0.1:54321`, PostgreSQL en `127.0.0.1:54322` y Studio en `http://127.0.0.1:54323`. Docker Desktop muestra cinco componentes funcionales (`db`, `auth`, `storage`, `rest`, `kong`) y dos herramientas locales (`studio`, `pg_meta`). Edge Runtime, Realtime, Analytics, correo, Image Proxy y Pooler están desactivados para este incremento.
 
@@ -122,7 +122,7 @@ pwsh ./scripts/Import-HistoricalActivities.ps1 `
   -AccessToken '<JWT de la cuenta sintética>'
 ```
 
-La importación real usa el mismo comando desde fuera de `App/`; el CSV nunca se copia al repositorio. La producción requiere `SUPABASE_SECRET_KEY` y sólo se importa tras confirmar que el archivo cabe en los umbrales gratuitos. Toda prueba local/CI usa exclusivamente fixtures sintéticos.
+La importación real usa el mismo comando desde fuera de `App/`; el CSV nunca se copia al repositorio. La producción requiere `SUPABASE_SECRET_KEY` y sólo se importa tras confirmar que el archivo cabe en los umbrales gratuitos. Toda prueba local usa exclusivamente fixtures sintéticos.
 
 ## Ingestión incremental FIT
 
@@ -157,7 +157,7 @@ Exportación y solicitudes de archivo/eliminación están en **Perfil → Mis da
 
 ## Producción y operación
 
-La configuración reproducible vive en `render.yaml`, `src/web/vercel.json` y `.github/workflows/ci.yml`. Producción exige orígenes CORS HTTPS exactos, limita peticiones y tamaños, oculta OpenAPI, publica cabeceras CSP/HSTS y expone liveness/readiness sin datos privados. El frontend tolera el arranque frío del backend gratuito con reintentos acotados y un mensaje visible.
+La configuración reproducible vive en `render.yaml` y `src/web/vercel.json`. GitHub aloja el código sin Actions; las verificaciones se ejecutan localmente. Producción exige orígenes CORS HTTPS exactos, limita peticiones y tamaños, oculta OpenAPI, publica cabeceras CSP/HSTS y expone liveness/readiness sin datos privados. El frontend tolera el arranque frío del backend gratuito con reintentos acotados y un mensaje visible.
 
 Antes de publicar el contenido preparado en Git, ejecuta:
 

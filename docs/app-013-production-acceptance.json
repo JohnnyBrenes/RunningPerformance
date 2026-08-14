@@ -8,7 +8,9 @@
     "target": "https://github.com/JohnnyBrenes/RunningPerformance",
     "visibility": "public",
     "license": "MIT",
-    "publishBoundary": "App/"
+    "publishBoundary": "App/",
+    "githubActionsEnabled": false,
+    "verificationMode": "local_targeted_during_development_full_before_release_or_deploy"
   },
   "localGates": {
     "dotnetFormat": "passed",
@@ -42,7 +44,7 @@
     { "id": 10, "status": "verified_local" },
     { "id": 11, "status": "verified_local" },
     { "id": 12, "status": "verified_local" },
-    { "id": 13, "status": "prepared", "pending": "remote CI green" },
+    { "id": 13, "status": "verified_local" },
     { "id": 14, "status": "partial", "pending": "real encrypted backup and full isolated restore" },
     { "id": 15, "status": "pending", "pending": "zero-cost production deployment and billing evidence" },
     { "id": 16, "status": "pending", "pending": "physical iPhone add-to-home-screen and standalone smoke" }

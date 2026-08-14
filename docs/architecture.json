@@ -1,10 +1,10 @@
 {
   "taskId": "APP-003",
-  "architectureVersion": "APP-003-v3-2026-08-14",
+  "architectureVersion": "APP-003-v4-2026-08-14",
   "status": "approved",
   "style": "modular_monolith_with_hosted_background_worker_free_deployment_profile",
   "contracts": {
-    "functional": "APP-001-v5-2026-08-14",
+    "functional": "APP-001-v6-2026-08-14",
     "dataModel": "APP-002-v3-2026-08-12"
   },
   "deployables": [
@@ -41,7 +41,9 @@
     ],
     "database": "supabase/migrations",
     "databaseTests": "supabase/tests/database",
-    "realDataAllowed": false
+    "realDataAllowed": false,
+    "githubActionsEnabled": false,
+    "verificationMode": "local_only"
   },
   "frontend": {
     "directSupabaseUse": ["authentication_only"],
@@ -140,7 +142,7 @@
     "queue": "PostgreSQL_ingestion_runs",
     "productionExecution": "BackgroundService_hosted_inside_API_process",
     "separateWorkerDeployment": false,
-    "localAndCiHost": "RunningPerformance.Worker_console_host",
+    "localHost": "RunningPerformance.Worker_console_host",
     "externalBroker": false,
     "claim": "FOR_UPDATE_SKIP_LOCKED_with_expiring_lease",
     "recovery": ["heartbeat", "attempt_count", "next_attempt_at", "expired_lease_requeue"],
@@ -198,13 +200,14 @@
   },
   "environments": {
     "local": "Supabase_CLI_stack_and_synthetic_seed",
-    "integration": "second_free_Supabase_project_and_sleeping_Render_free_service_for_smoke_only",
+    "integration": "local_Supabase_CLI_stack_only",
     "production": "free_Supabase_project_and_single_Render_free_API_hosted_worker_service",
-    "productionDataInLocalOrCI": false,
+    "productionDataInTestEnvironments": false,
     "persistentPaidPreviewEnvironment": false,
     "manualBackup": "local_supabase_db_dump_plus_private_storage_export_outside_Git"
   },
   "testing": {
+    "execution": "local_only",
     "domain": ["source_precedence", "identity", "P1_to_P5", "sRPE", "plan_adjustments"],
     "database": ["constraints", "RLS_two_owners", "immutability", "functions", "storage_policies"],
     "api": ["JWT", "owner_derivation", "idempotency", "pagination", "file_limits", "problem_details"],
@@ -256,7 +259,6 @@
     "https://render.com/docs/health-checks",
     "https://supabase.com/pricing",
     "https://supabase.com/docs/guides/platform/backups",
-    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
     "https://www.w3.org/TR/appmanifest/",
     "https://developer.apple.com/videos/play/wwdc2022/10048/"
   ],

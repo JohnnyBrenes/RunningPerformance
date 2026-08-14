@@ -7,8 +7,14 @@ $program = Get-Content -Raw (Join-Path $appRoot 'src/backend/RunningPerformance.
 $worker = Get-Content -Raw (Join-Path $appRoot 'src/backend/RunningPerformance.Infrastructure/Jobs/IngestionWorker.cs')
 $vercel = Get-Content -Raw (Join-Path $appRoot 'src/web/vercel.json') | ConvertFrom-Json
 $render = Get-Content -Raw (Join-Path $appRoot 'render.yaml')
-$workflow = Get-Content -Raw (Join-Path $appRoot '.github/workflows/ci.yml')
 $gitignore = Get-Content -Raw (Join-Path $appRoot '.gitignore')
+$workflowRoot = Join-Path $appRoot '.github/workflows'
+$workflowFiles = if (Test-Path -LiteralPath $workflowRoot) {
+    @(Get-ChildItem -LiteralPath $workflowRoot -Force -File | Where-Object { $_.Extension -in @('.yml', '.yaml') })
+}
+else {
+    @()
+}
 
 if ($program -notmatch 'AddRateLimiter' -or $program -notmatch 'Status429TooManyRequests') {
     throw 'Production API rate limiting is not configured.'
@@ -51,8 +57,8 @@ if ($render -notmatch '(?m)^\s+plan:\s+free\s*$' -or
 if ($render -match '(?m)^\s+(disk|numInstances|scaling):') {
     throw 'Render configuration contains a non-free persistence or scaling feature.'
 }
-if ($workflow -match 'pull_request_target' -or $workflow -notmatch '(?ms)^permissions:\s*\n\s+contents:\s+read') {
-    throw 'CI permissions are not read-only or use an unsafe pull_request_target trigger.'
+if ($workflowFiles.Count -gt 0) {
+    throw 'GitHub Actions must remain disabled; all verification is local by project policy.'
 }
 if ($gitignore -notmatch 'supabase/\.temp/') {
     throw 'Supabase linked-project metadata is not excluded from Git.'
@@ -61,4 +67,4 @@ foreach ($file in @('BackupCrypto.psm1', 'New-ProductionBackup.ps1', 'Test-Produ
     if (!(Test-Path -LiteralPath (Join-Path $PSScriptRoot $file))) { throw "Falta el artefacto operativo $file." }
 }
 
-Write-Output 'Production hardening OK: API, worker, Vercel, Render, CI and backup contracts are fail-closed.'
+Write-Output 'Production hardening OK: API, worker, Vercel, Render, local verification and backup contracts are fail-closed.'

@@ -1,6 +1,6 @@
 {
   "taskId": "APP-001",
-  "version": "APP-001-v5-2026-08-14",
+  "version": "APP-001-v6-2026-08-14",
   "status": "approved",
   "product": "Running Performance App",
   "initialUserScope": "single_athlete",
@@ -107,6 +107,8 @@
   },
   "githubPolicy": {
     "publishableRoot": "App/",
+    "actionsEnabled": false,
+    "verificationMode": "local_targeted_during_development_full_before_release_or_deploy",
     "workspaceRootPublishable": false,
     "realAthleteDataAllowed": false,
     "secretsAllowed": false,

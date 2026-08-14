@@ -1,6 +1,6 @@
 # Requerimientos funcionales — Running Performance App
 
-**Versión:** `APP-001-v5-2026-08-14`  
+**Versión:** `APP-001-v6-2026-08-14`
 **Estado:** aprobado  
 **Usuario inicial:** un atleta  
 **Persistencia objetivo:** Supabase PostgreSQL  
@@ -242,7 +242,7 @@ El propio atleta en funciones de mantenimiento: ejecuta importaciones, revisa co
 
 ### Costo de publicación
 
-- **COST-001:** todos los elementos necesarios para publicar el MVP usarán planes gratuitos con costo obligatorio de USD 0: repositorio/CI, frontend, backend, autenticación, PostgreSQL y Storage.
+- **COST-001:** todos los elementos necesarios para publicar el MVP usarán planes gratuitos con costo obligatorio de USD 0: repositorio, frontend, backend, autenticación, PostgreSQL y Storage.
 - **COST-002:** no se activarán trials, add-ons, dominios pagados, planes con cuota ni upgrades automáticos. Añadir un medio de pago o aceptar un costo requiere una decisión posterior explícita del usuario y una nueva versión del plan.
 - **COST-003:** al acercarse a una cuota gratuita, el sistema debe advertir y degradar, pausar o bloquear la operación afectada antes que generar un cargo. La disponibilidad continua no prevalece sobre costo cero.
 - **COST-004:** la interfaz y los runbooks deben contemplar arranque en frío, suspensión por inactividad, agotamiento de cuota y restauración manual propios de los planes gratuitos.
@@ -256,7 +256,7 @@ El propio atleta en funciones de mantenimiento: ejecuta importaciones, revisa co
 - **UX-005:** las imágenes de ejercicios tendrán texto alternativo, carga diferida y dimensiones reservadas; nunca serán el único medio para comunicar la técnica.
 - **UX-006:** navegación, tablas/tarjetas, gráficas, formularios y cargas de archivo se adaptarán a touch y teclado, respetarán las safe areas del iPhone y usarán objetivos táctiles de al menos 44 × 44 CSS px.
 - **UX-007:** la publicación HTTPS incluirá Web App Manifest, iconos instalables y metadatos compatibles con iPhone. Desde Safari, el atleta podrá usar “Añadir a pantalla de inicio”, abrir el acceso en modo independiente y encontrar instrucciones dentro de Perfil; no se promete operación offline.
-- **QLT-001:** CI debe compilar frontend/backend y ejecutar pruebas y análisis de dependencias.
+- **QLT-001:** antes de cada despliegue, la verificación local debe compilar frontend/backend y ejecutar pruebas y análisis de dependencias. GitHub Actions permanece deshabilitado.
 - **QLT-002:** migraciones y políticas de base de datos se versionan y prueban.
 - **QLT-003:** no publicar si detección de secretos, pruebas críticas o importación idempotente fallan.
 
@@ -268,7 +268,7 @@ El futuro repositorio se crea desde `App/`, no desde la raíz `RunningPerformanc
 
 ### Permitido
 
-- Código, migraciones, CI/CD y documentación sanitizada.
+- Código, migraciones, configuración de despliegue y documentación sanitizada.
 - `.env.example` con nombres de variables y valores ficticios.
 - Fixtures sintéticos generados expresamente, sin rutas o métricas reales.
 - Esquemas y ejemplos mínimos que no permitan identificar al atleta.
@@ -309,7 +309,7 @@ El MVP se considera funcional cuando:
 12. El dashboard permite rastrear cada agregado hasta sus datos fuente.
 13. El repositorio contiene solo datos sintéticos, pasa detección de secretos, builds y pruebas.
 14. Existe procedimiento probado de respaldo y restauración.
-15. Repositorio/CI, frontend, backend, Auth, PostgreSQL y Storage están publicados con costo obligatorio de USD 0, sin medio de pago ni componente trial; superar una cuota detiene o degrada el servicio en vez de facturar.
+15. Repositorio, frontend, backend, Auth, PostgreSQL y Storage están publicados con costo obligatorio de USD 0, sin medio de pago ni componente trial; superar una cuota detiene o degrada el servicio en vez de facturar.
 16. En un iPhone real, Safari permite añadir la aplicación a la pantalla de inicio con el nombre e icono definidos; al abrirla desde allí usa modo independiente y permite iniciar sesión y completar los flujos principales con conexión.
 
 ## 9. Traspaso a APP-002
@@ -331,4 +331,4 @@ El modelo de datos deberá representar, sin duplicación ni pérdida de proceden
 
 `APP-002` decidirá tablas, claves, relaciones, índices, RLS, partición o retención de muestras y ubicación del binario FIT.
 
-La enmienda `APP-001-v4-2026-08-12` agregó `COST-001` a `COST-004` y el criterio de aceptación 15. La enmienda `APP-001-v5-2026-08-14` agrega `UX-007` y el criterio 16: instalación en pantalla de inicio del iPhone, separada explícitamente de la operación offline. `APP-013` deberá verificar ambos criterios de despliegue en un dispositivo real.
+La enmienda `APP-001-v4-2026-08-12` agregó `COST-001` a `COST-004` y el criterio de aceptación 15. La enmienda `APP-001-v5-2026-08-14` agregó `UX-007` y el criterio 16: instalación en pantalla de inicio del iPhone, separada explícitamente de la operación offline. `APP-001-v6-2026-08-14` establece verificación local, sin GitHub Actions ni base alojada de integración. `APP-013` deberá verificar ambos criterios de despliegue en un dispositivo real.

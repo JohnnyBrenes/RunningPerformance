@@ -1,8 +1,8 @@
 # Arquitectura — Running Performance App
 
-**Versión:** `APP-003-v3-2026-08-14`  
+**Versión:** `APP-003-v4-2026-08-14`
 **Estado:** aprobada para planificación  
-**Contratos:** `APP-001-v5-2026-08-14` y `APP-002-v3-2026-08-12`
+**Contratos:** `APP-001-v6-2026-08-14` y `APP-002-v3-2026-08-12`
 
 ## 1. Decisión ejecutiva
 
@@ -11,7 +11,7 @@ El MVP será un **monolito modular con worker de fondo**. Conserva tres piezas l
 1. una SPA React + TypeScript + Vite en Vercel;
 2. un único Web Service ASP.NET Core sobre .NET 10 LTS que aloja la API REST y el Worker como `BackgroundService` en el mismo proceso.
 
-El Worker sigue siendo un componente aislado y comprobable que comparte dominio e infraestructura con la API. `RunningPerformance.Worker` ofrece además un host de consola para ejecución local, CI y una migración futura a proceso separado, pero no se publica como segundo servicio mientras rija costo cero.
+El Worker sigue siendo un componente aislado y comprobable que comparte dominio e infraestructura con la API. `RunningPerformance.Worker` ofrece además un host de consola para ejecución local y una migración futura a proceso separado, pero no se publica como segundo servicio mientras rija costo cero.
 
 Supabase hospedará Auth, PostgreSQL y Storage. El frontend usará Supabase directamente solo para autenticación; todas las operaciones de dominio pasarán por la API. La API y el Worker accederán a PostgreSQL con Npgsql y roles dedicados de mínimo privilegio. El esquema se administra únicamente mediante SQL y Supabase CLI.
 
@@ -73,7 +73,7 @@ Límites de confianza:
 | API | ASP.NET Core .NET 10 LTS | JWT, autorización, DTOs, validación, reglas de negocio, uploads, comandos y consultas |
 | Application/Domain | proyectos .NET compartidos | casos de uso, reglas de precedencia, P1–P5, decisiones y contratos sin dependencia web |
 | Infraestructura | Npgsql y SQL explícito | unidades de trabajo, RLS, consultas, COPY/lotes, Storage y reloj/identificadores |
-| Worker | .NET `BackgroundService` en API; host de consola separado para local/CI | CSV, FIT, reprocesos, evaluaciones, exportaciones, reintentos y reconciliación |
+| Worker | .NET `BackgroundService` en API; host de consola separado para local | CSV, FIT, reprocesos, evaluaciones, exportaciones, reintentos y reconciliación |
 | FIT | librería extraída de `Tools/FitProcessor` | validación SDK, extracción determinista y contrato canónico |
 | Base | Supabase PostgreSQL | fuente de verdad, RLS, constraints, auditoría, jobs y vistas |
 | Archivos | Supabase Storage privado | CSV/FIT originales y exportaciones temporales |
@@ -104,8 +104,7 @@ App/
 │   ├── tests/database/
 │   ├── seed.sql                     solo datos sintéticos
 │   └── config.toml
-├── docs/
-└── .github/workflows/
+└── docs/
 ```
 
 Se conserva una sola solución .NET. Los módulos funcionales son `Profile`, `Races`, `Planning`, `Exercises`, `Activities`, `Ingestion`, `Evaluation`, `Decisions` y `Exports`. Cada módulo agrupa endpoints, casos de uso, DTOs y persistencia; no se crea un proyecto por módulo.
@@ -336,7 +335,7 @@ sequenceDiagram
 - Web: Vercel Hobby, build estático Vite, rutas SPA y dominio `vercel.app`.
 - API + Worker alojado: un Render Free Web Service Docker, 512 MB RAM/0.1 CPU, dominio `onrender.com` y región Virginia.
 - Supabase: Free Plan con Auth, PostgreSQL y Storage en `us-east-1` North Virginia.
-- Repositorio/CI: GitHub Free; si es privado, CI se mantiene dentro de sus 2,000 minutos mensuales y 500 MB de artefactos.
+- Repositorio: GitHub Free público, usado sólo para alojar el código; GitHub Actions permanece deshabilitado.
 
 Vercel Hobby se usa bajo su condición de proyecto personal no comercial. Si el uso cambia, se pausa la publicación hasta aprobar otra opción gratuita; no se asciende automáticamente.
 
@@ -344,18 +343,16 @@ La cuota obligatoria conjunta es USD 0. No se agrega medio de pago, trial, add-o
 
 API y Worker comparten proceso solo como perfil de despliegue. El trabajo sigue fuera del request, usa leases y puede separarse sin cambiar dominio, tablas o contratos si el usuario autoriza otro modelo en el futuro.
 
-### Local, preview y producción
+### Local y producción
 
-- Supabase CLI + runtime de contenedores para desarrollo local;
-- hasta dos proyectos Supabase Free separados para integración y producción;
-- preview Vercel usa datos sintéticos y el backend de integración gratuito solo cuando se ejecuta un smoke; nunca producción;
-- integración permanece dormida fuera de pruebas para compartir las 750 horas gratuitas Render;
+- Supabase CLI + runtime de contenedores para desarrollo y todas las pruebas locales;
+- un proyecto Supabase Free para producción; no existe una base alojada de integración;
 - seeds y fixtures exclusivamente sintéticos;
-- datos reales no se copian a local/CI.
+- datos reales no se copian al entorno local de pruebas.
 
 Supabase Free no incluye backup diario descargable. Un script local usa `supabase db dump`, exporta también los objetos privados y prueba restauración; el respaldo cifrado permanece fuera de Git y de los servicios publicados.
 
-## 16. Pruebas y CI
+## 16. Pruebas y puertas locales
 
 | Capa | Pruebas mínimas |
 |---|---|
@@ -366,7 +363,7 @@ Supabase Free no incluye backup diario descargable. Un script local usa `supabas
 | Web | formularios, estados, accesibilidad, adaptación iPhone/PC y guía de ejercicio sin imágenes |
 | E2E | login, sesión del día, plan, upload sintético, actividad, check-in, dashboard, evaluación, decisión y revocación de sync client en viewports móvil/escritorio |
 
-Pipeline por PR:
+Suite local completa antes de una entrega o despliegue; durante el desarrollo se ejecutan sólo las comprobaciones afectadas por el cambio:
 
 1. formato/lint TypeScript y .NET;
 2. build de web, API y Worker;
@@ -375,7 +372,7 @@ Pipeline por PR:
 5. integración/E2E con fixtures sintéticos;
 6. auditoría de dependencias, contenedor y secretos;
 7. verificación de que no hay extensiones/archivos personales;
-8. publicación de artefactos solo si todas las puertas pasan.
+8. push o despliegue solo si todas las puertas pasan.
 
 ## 17. Decisiones rechazadas
 
@@ -410,7 +407,6 @@ Pipeline por PR:
 - [Render health checks](https://render.com/docs/health-checks): verificación continua mientras la instancia está activa y reinicio por fallos.
 - [Supabase Free](https://supabase.com/pricing): 500 MB de base, 1 GB de Storage, cuotas de egreso y pausa por inactividad.
 - [Backups Supabase](https://supabase.com/docs/guides/platform/backups): `db dump` y respaldo externo recomendado para Free.
-- [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): CI gratuito en repositorios públicos y cuota incluida en privados.
 - [Web Application Manifest del W3C](https://www.w3.org/TR/appmanifest/): contrato para nombre, iconos, `start_url`, `scope` y modo de presentación de la aplicación instalada.
 - [Web apps en Safari y WebKit](https://developer.apple.com/videos/play/wwdc2022/10048/): Safari usa el manifest para las web apps añadidas a la pantalla de inicio; la instalación sigue siendo una acción del usuario.
 

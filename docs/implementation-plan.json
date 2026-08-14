@@ -1,16 +1,16 @@
 {
-  "version": "APP-004-v3-2026-08-14",
+  "version": "APP-004-v4-2026-08-14",
   "status": "approved_for_incremental_execution",
   "contracts": {
-    "functionalRequirements": "APP-001-v5-2026-08-14",
+    "functionalRequirements": "APP-001-v6-2026-08-14",
     "dataModel": "APP-002-v3-2026-08-12",
-    "architecture": "APP-003-v3-2026-08-14"
+    "architecture": "APP-003-v4-2026-08-14"
   },
   "strategy": {
     "type": "vertical_increments",
     "incrementCount": 10,
     "publishableRoot": "App/",
-    "realDataAllowedInLocalOrCi": false,
+    "realDataAllowedInTestEnvironments": false,
     "productionBeforeSecurityGates": false,
     "nextTask": "APP-005",
     "nextTaskActivated": false,
@@ -18,11 +18,11 @@
     "freePlansOnly": true
   },
   "deployment": {
-    "repositoryAndCi": {
+    "repository": {
       "provider": "GitHub Free",
-      "privateActionsMinutesPerMonth": 2000,
-      "artifactStorageMb": 500,
-      "onQuotaExhaustion": "stop_ci_without_charge"
+      "visibility": "public",
+      "actionsEnabled": false,
+      "verificationMode": "local_targeted_during_development_full_before_release_or_deploy"
     },
     "web": {
       "provider": "Vercel",
@@ -54,7 +54,7 @@
     "worker": {
       "separateProductionService": false,
       "productionHost": "ASP.NET Core hosted BackgroundService",
-      "alternativeHost": "RunningPerformance.Worker for local, CI or an explicitly approved future split"
+      "alternativeHost": "RunningPerformance.Worker for local use or an explicitly approved future split"
     },
     "supabase": {
       "plan": "Free",
@@ -103,16 +103,6 @@
       "name": "local",
       "data": "synthetic_only",
       "purpose": "development and Supabase CLI tests"
-    },
-    {
-      "name": "ci",
-      "data": "ephemeral_synthetic_only",
-      "purpose": "build, pgTAP, integration and E2E"
-    },
-    {
-      "name": "integration",
-      "data": "synthetic_only",
-      "purpose": "on-demand smoke tests on second Supabase Free project and sleeping Render Free service"
     },
     {
       "name": "production",
@@ -336,7 +326,7 @@
     {
       "id": "G1",
       "name": "data isolation",
-      "blocks": "integration provisioning and all real data"
+      "blocks": "production provisioning and all real data"
     },
     {
       "id": "G2",
