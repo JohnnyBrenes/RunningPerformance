@@ -33,11 +33,13 @@ function localTimeZone() {
 const raceDefaults: RaceForm = { name: '', raceDate: '', distanceM: '10000', location: '', priority: 'A', status: 'planned', timezoneName: localTimeZone() }
 const goalDefaults: GoalForm = { goalTime: '', confidence: 'medium', rationale: '' }
 
-function secondsFromClock(value: string): number | null {
+export function secondsFromClock(value: string): number | null {
   if (!value) return null
   const parts = value.split(':').map(Number)
-  if (parts.some(Number.isNaN) || parts.length < 2 || parts.length > 3) return null
-  return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]
+  if (parts.some(Number.isNaN) || parts.length !== 3) return null
+  const [hours, minutes, seconds] = parts
+  if (hours < 0 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) return null
+  return hours * 3600 + minutes * 60 + seconds
 }
 
 function clockFromSeconds(value: number | string | null | undefined): string {
@@ -47,6 +49,15 @@ function clockFromSeconds(value: number | string | null | undefined): string {
   const minutes = Math.floor((seconds % 3600) / 60)
   const rest = seconds % 60
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}` : `${minutes}:${String(rest).padStart(2, '0')}`
+}
+
+export function goalTimeInputFromSeconds(value: number | string | null | undefined): string {
+  if (value == null || !Number.isFinite(Number(value))) return ''
+  const seconds = Math.round(Number(value))
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const rest = seconds % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
 }
 
 export function RacesPage() {
@@ -101,7 +112,7 @@ export function RacesPage() {
   const openGoal = (race: TargetRaceResponse) => {
     setGoalRace(race)
     goalForm.reset({
-      goalTime: clockFromSeconds(race.currentGoal?.goalTimeSeconds),
+      goalTime: goalTimeInputFromSeconds(race.currentGoal?.goalTimeSeconds),
       confidence: race.currentGoal?.confidence ?? 'medium',
       rationale: '',
     })
@@ -132,7 +143,7 @@ export function RacesPage() {
       {goalRace && (
         <form className="form-card goal-form form-grid" onSubmit={goalForm.handleSubmit((values) => saveGoal.mutate(values))}>
           <div className="form-title span-2"><div><span className="section-label">Nueva versión de meta</span><h2>{goalRace.name}</h2></div><button className="icon-button" type="button" aria-label="Cerrar" onClick={() => setGoalRace(null)}>×</button></div>
-          <label>Tiempo objetivo (h:mm:ss)<input placeholder="00:48:00" pattern="[0-9]{1,2}:[0-5][0-9](:[0-5][0-9])?" {...goalForm.register('goalTime', { required: true })} /></label>
+          <label>Tiempo objetivo (h:mm:ss)<input placeholder="00:48:00" pattern="[0-9]{1,3}:[0-5][0-9]:[0-5][0-9]" title="Usa horas:minutos:segundos, por ejemplo 01:45:00" {...goalForm.register('goalTime', { required: true })} /></label>
           <label>Ritmo calculado<input aria-label="Ritmo calculado" value={clockFromSeconds(calculatedGoalPace)} readOnly /></label>
           <label>Confianza<select {...goalForm.register('confidence')}><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option></select></label>
           <label className="span-2">Por qué cambia esta meta<textarea rows={3} {...goalForm.register('rationale', { required: true, maxLength: 2000 })} /></label>
@@ -164,7 +175,7 @@ function cleanRace(values: RaceForm): SaveTargetRaceRequest {
   return { ...values, distanceM: values.distanceM, location: values.location?.trim() || null, timezoneName: values.timezoneName }
 }
 
-function calculatePace(time: string, distanceM: number): number | null {
+export function calculatePace(time: string, distanceM: number): number | null {
   const totalSeconds = secondsFromClock(time)
   if (totalSeconds == null || !Number.isFinite(distanceM) || distanceM <= 0) return null
   return totalSeconds / (distanceM / 1000)

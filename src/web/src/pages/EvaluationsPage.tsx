@@ -145,7 +145,10 @@ export function formatMetricValue(metric: Pick<WeeklyMetricValueResponse, 'statu
   if (metric.unit === 'percent') return `${round(value)} %`
   if (metric.unit === 'm' && metric.dimension.includes('distance')) return `${round(value / 1000)} km`
   if (metric.unit === 's' && metric.dimension.includes('duration')) return `${round(value / 60)} min`
-  if (metric.unit === 's/km') return `${Math.floor(value / 60)}:${String(Math.round(value % 60)).padStart(2, '0')} min/km`
+  if (metric.unit === 's/km') {
+    const roundedSeconds = Math.round(value)
+    return `${Math.floor(roundedSeconds / 60)}:${String(roundedSeconds % 60).padStart(2, '0')} min/km`
+  }
   return `${round(value)}${metric.unit ? ` ${metric.unit}` : ''}`
 }
 

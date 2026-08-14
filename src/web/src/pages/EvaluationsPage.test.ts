@@ -13,5 +13,6 @@ describe('weekly metric presentation', () => {
 
   it('formats modality-specific pace from time divided by distance', () => {
     expect(formatMetricValue({ status: 'available', numericValue: 360, booleanValue: null, textValue: null, unit: 's/km', dimension: 'pace_seconds_per_km:treadmill' })).toBe('6:00 min/km')
+    expect(formatMetricValue({ status: 'available', numericValue: 359.6, booleanValue: null, textValue: null, unit: 's/km', dimension: 'pace_seconds_per_km:outdoor' })).toBe('6:00 min/km')
   })
 })
