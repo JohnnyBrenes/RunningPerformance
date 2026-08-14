@@ -1,0 +1,62 @@
+{
+  "version": "APP-008-v1-2026-08-12",
+  "status": "completed",
+  "completedAt": "2026-08-12",
+  "increment": "I2",
+  "summary": "Supabase Auth, JWT/JWKS, Npgsql RLS, shell responsive y el corte vertical de perfil, antecedentes, carreras y metas versionadas quedaron operativos en Docker local/CI con datos sintéticos.",
+  "security": {
+    "publicSignupEnabled": false,
+    "jwtValidation": ["signature", "issuer", "audience", "expiry", "sub_uuid", "authenticated_role"],
+    "fallbackPolicy": true,
+    "ownerSource": "verified_sub_claim_only",
+    "clientSuppliedUserIdAccepted": false,
+    "transactionRole": "rp_api",
+    "poolContextLeak": false,
+    "crossOwnerKnownRaceGoalStatus": 404
+  },
+  "features": [
+    "login",
+    "password_recovery",
+    "logout_and_query_cache_clear",
+    "responsive_shell",
+    "profile_editing",
+    "health_context_history",
+    "target_races",
+    "immutable_race_goal_versions",
+    "automatic_goal_pace_from_time_and_distance"
+  ],
+  "verification": {
+    "databaseMigrations": 10,
+    "databaseLintErrors": 0,
+    "pgtapPassed": 37,
+    "dotnetUnitPassed": 8,
+    "dotnetIntegrationPassed": 2,
+    "vitestPassed": 4,
+    "playwrightPassed": 9,
+    "playwrightProfiles": ["chromium_320", "webkit_390", "chromium_desktop"],
+    "npmVulnerabilities": 0,
+    "dockerLiveStatus": 200,
+    "dockerReadyStatus": 200,
+    "dockerUser": "1654",
+    "schemaTables": 45,
+    "schemaViews": 8,
+    "passwordRecoveryStatus": 200
+  },
+  "operations": {
+    "kongRestartRecovery": "npm --prefix src/web run db:repair",
+    "preservesLocalDatabase": true,
+    "webUrl": "http://127.0.0.1:5173",
+    "apiUrl": "http://127.0.0.1:5080"
+  },
+  "toolchain": {
+    "dotnetSdk": "10.0.400",
+    "aspnetRuntime": "10.0.10",
+    "playwright": "1.62.1",
+    "sshNetSecurityOverride": "2026.0.0"
+  },
+  "productionCreated": false,
+  "realDataImported": false,
+  "paidComponentsEnabled": false,
+  "nextTask": "APP-009",
+  "nextTaskActivated": false
+}

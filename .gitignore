@@ -1,0 +1,63 @@
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+.vite/
+**/.tmp/
+supabase/.temp/
+supabase/.branches/
+
+# .NET
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Tests and tooling
+coverage/
+TestResults/
+playwright-report/
+test-results/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+**/appsettings.Development.json
+**/appsettings.*.local.json
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Runtime athlete data: never commit
+data/
+uploads/
+quarantine/
+runtime/
+*.fit
+*.FIT
+*.tcx
+*.TCX
+*.gpx
+*.GPX
+*.zip
+*.har
+*storage-state*.json
+*run-status*.json
+
+# Logs and local databases
+*.log
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

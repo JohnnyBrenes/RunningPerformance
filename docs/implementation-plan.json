@@ -1,0 +1,485 @@
+{
+  "version": "APP-004-v3-2026-08-14",
+  "status": "approved_for_incremental_execution",
+  "contracts": {
+    "functionalRequirements": "APP-001-v5-2026-08-14",
+    "dataModel": "APP-002-v3-2026-08-12",
+    "architecture": "APP-003-v3-2026-08-14"
+  },
+  "strategy": {
+    "type": "vertical_increments",
+    "incrementCount": 10,
+    "publishableRoot": "App/",
+    "realDataAllowedInLocalOrCi": false,
+    "productionBeforeSecurityGates": false,
+    "nextTask": "APP-005",
+    "nextTaskActivated": false,
+    "mandatoryPublicationCostUsdPerMonth": 0,
+    "freePlansOnly": true
+  },
+  "deployment": {
+    "repositoryAndCi": {
+      "provider": "GitHub Free",
+      "privateActionsMinutesPerMonth": 2000,
+      "artifactStorageMb": 500,
+      "onQuotaExhaustion": "stop_ci_without_charge"
+    },
+    "web": {
+      "provider": "Vercel",
+      "plan": "Hobby",
+      "workload": "React Vite installable static SPA, Web App Manifest, versioned icons and exercise assets",
+      "domain": "provider_vercel_app_subdomain",
+      "usageProfile": "personal_noncommercial_only",
+      "httpsRequiredForHomeScreenInstallation": true,
+      "iphoneStandaloneDisplayRequired": true,
+      "offlineOperationRequired": false
+    },
+    "backend": {
+      "provider": "Render",
+      "plan": "Free",
+      "region": "virginia",
+      "location": "Virginia, USA",
+      "serviceType": "single_public_Docker_web_service",
+      "logicalComponents": ["REST_API", "hosted_BackgroundService_worker"],
+      "replicasInitially": 1,
+      "memoryMb": 512,
+      "cpu": 0.1,
+      "freeHoursPerWorkspaceMonth": 750,
+      "idleSleepMinutes": 15,
+      "coldStartApproximateMinutes": 1,
+      "deploymentHealthPath": "/health/ready",
+      "jobRecovery": "PostgreSQL lease expiry and recovery on next HTTP wake",
+      "artificialKeepAliveAllowed": false
+    },
+    "worker": {
+      "separateProductionService": false,
+      "productionHost": "ASP.NET Core hosted BackgroundService",
+      "alternativeHost": "RunningPerformance.Worker for local, CI or an explicitly approved future split"
+    },
+    "supabase": {
+      "plan": "Free",
+      "region": "us-east-1",
+      "location": "North Virginia",
+      "postgresMajor": 17,
+      "databaseLimitMb": 500,
+      "storageLimitMb": 1000,
+      "egressLimitGb": 5,
+      "freeProjectsMaximum": 2,
+      "lowActivityPauseExpected": true
+    },
+    "quotaGuardrails": {
+      "databaseWarningMb": 300,
+      "databaseDetailedImportBlockMb": 400,
+      "storageWarningMb": 700,
+      "storageUploadBlockMb": 850,
+      "onAnyQuotaExhaustion": "warn_degrade_pause_or_block_without_charge"
+    },
+    "cost": {
+      "mandatoryUsdPerMonth": 0,
+      "paymentMethodAllowed": false,
+      "trialsAllowed": false,
+      "paidAddonsAllowed": false,
+      "purchasedCustomDomainAllowed": false,
+      "automaticUpgradeAllowed": false,
+      "pilotDaysMinimum": 7
+    },
+    "backups": {
+      "database": "local supabase db dump",
+      "storage": "encrypted private object export",
+      "location": "outside Git and published services",
+      "restoreTestRequired": true
+    },
+    "observability": {
+      "components": ["provider_free_logs", "health_endpoints", "in_app_job_and_quota_dashboard"],
+      "paidMonitoringAllowed": false,
+      "artificialUptimePingsAllowed": false
+    },
+    "fallbacks": [
+      "Only another mandatory-cost-USD-0 provider approved explicitly by the user"
+    ]
+  },
+  "environments": [
+    {
+      "name": "local",
+      "data": "synthetic_only",
+      "purpose": "development and Supabase CLI tests"
+    },
+    {
+      "name": "ci",
+      "data": "ephemeral_synthetic_only",
+      "purpose": "build, pgTAP, integration and E2E"
+    },
+    {
+      "name": "integration",
+      "data": "synthetic_only",
+      "purpose": "on-demand smoke tests on second Supabase Free project and sleeping Render Free service"
+    },
+    {
+      "name": "production",
+      "data": "private_real_data",
+      "purpose": "historical source of truth after G5 within free quotas"
+    }
+  ],
+  "versions": {
+    "toolchain": {
+      "dotnetSdk": "10.0.302",
+      "aspnetRuntime": "10.0.10",
+      "node": "22.15.1",
+      "npm": "11.6.2",
+      "postgresMajor": "17",
+      "supabaseCli": "2.110.0"
+    },
+    "backend": {
+      "Microsoft.AspNetCore.Authentication.JwtBearer": "10.0.10",
+      "Microsoft.AspNetCore.OpenApi": "10.0.10",
+      "Microsoft.Extensions.ApiDescription.Server": "10.0.10",
+      "Microsoft.OpenApi": "2.7.5",
+      "Microsoft.AspNetCore.Mvc.Testing": "10.0.10",
+      "Npgsql": "10.0.3",
+      "OpenTelemetry.Extensions.Hosting": "1.17.0",
+      "Garmin.FIT.Sdk": "21.205.0",
+      "Microsoft.NET.Test.Sdk": "18.8.1",
+      "xunit.v3": "3.2.2",
+      "Testcontainers.PostgreSql": "4.13.0"
+    },
+    "frontend": {
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "react-is": "19.2.8",
+      "typescript": "7.0.2",
+      "vite": "8.1.5",
+      "@vitejs/plugin-react": "6.0.4",
+      "react-router": "7.18.2",
+      "@supabase/supabase-js": "2.110.8",
+      "@tanstack/react-query": "5.101.4",
+      "zod": "4.4.3",
+      "react-hook-form": "7.82.0",
+      "tailwindcss": "4.3.3",
+      "@tailwindcss/vite": "4.3.3",
+      "recharts": "3.10.1",
+      "openapi-typescript-codegen": "0.31.0"
+    },
+    "webTesting": {
+      "vitest": "4.1.10",
+      "@testing-library/react": "16.3.2",
+      "@playwright/test": "1.61.1"
+    },
+    "policy": {
+      "directNpmVersionsExact": true,
+      "npmLockfile": true,
+      "nugetCentralPackageManagement": true,
+      "nugetLockedMode": true,
+      "previewVersionsAllowed": false,
+      "forcePeerResolutionAllowed": false,
+      "containerDigestResolvedIn": "I0"
+    }
+  },
+  "migrationSeries": [
+    {
+      "series": "0000",
+      "scope": "extensions, app schema, helpers and capability roles"
+    },
+    {
+      "series": "0010",
+      "scope": "profile, health, races and goals"
+    },
+    {
+      "series": "0020",
+      "scope": "exercises, revisions, media, plans and sessions"
+    },
+    {
+      "series": "0030",
+      "scope": "objects, files, jobs, activities and provenance"
+    },
+    {
+      "series": "0040",
+      "scope": "FIT attempts, warnings, schemas and normalized detail"
+    },
+    {
+      "series": "0050",
+      "scope": "activity-session links, outcomes and check-ins"
+    },
+    {
+      "series": "0060",
+      "scope": "evaluations, evidence, decisions, adjustments, notes and audit"
+    },
+    {
+      "series": "0070",
+      "scope": "exports, lifecycle, views, functions and controlled seeds"
+    },
+    {
+      "series": "0080",
+      "scope": "Storage policies, final grants and privilege tests"
+    }
+  ],
+  "increments": [
+    {
+      "id": "I0",
+      "task": "APP-005",
+      "name": "Reproducible foundations",
+      "requirements": [
+        "SEC-003",
+        "QLT-001",
+        "QLT-003"
+      ],
+      "exit": "Clean clone builds web and the combined API-hosted-worker container with locked dependencies, synthetic data and free-provider configuration"
+    },
+    {
+      "id": "I1",
+      "task": "APP-005",
+      "name": "Schema, RLS and Storage",
+      "requirements": [
+        "SEC-001",
+        "SEC-002",
+        "DAT-001",
+        "DAT-002",
+        "QLT-002"
+      ],
+      "exit": "Two-owner negative RLS and Storage tests pass across all private objects and simulated free quota guards block before provider limits"
+    },
+    {
+      "id": "I2",
+      "task": "APP-008",
+      "name": "Access, responsive shell, profile and races",
+      "requirements": [
+        "AUTH-001..AUTH-005",
+        "PRO-001..PRO-002",
+        "RACE-001..RACE-002",
+        "UX-001..UX-006"
+      ],
+      "exit": "Authenticated vertical flow derives owner only from the verified token and passes Chromium/WebKit smoke tests"
+    },
+    {
+      "id": "I3",
+      "task": "APP-009",
+      "name": "Visual exercise catalog and versioned plan",
+      "requirements": [
+        "PLAN-001..PLAN-004",
+        "EXE-001..EXE-003"
+      ],
+      "exit": "A synthetic training session is versioned and usable with zero to two accessible images per exercise"
+    },
+    {
+      "id": "I4",
+      "task": "APP-006",
+      "name": "Historical CSV ingestion",
+      "requirements": [
+        "ACT-001..ACT-005",
+        "CSV-001..CSV-003",
+        "OPS-003"
+      ],
+      "exit": "Two imports reconcile 460 rows with zero duplicates and preserved NULL values"
+    },
+    {
+      "id": "I5",
+      "task": "APP-007",
+      "name": "Incremental FIT and synchronizer",
+      "requirements": [
+        "FIT-001..FIT-007",
+        "SEC-007",
+        "OPS-005"
+      ],
+      "exit": "Repeated FIT is idempotent and conflicting ID/hash is quarantined without overwrite"
+    },
+    {
+      "id": "I6",
+      "task": "APP-010",
+      "name": "Planned versus completed and check-ins",
+      "requirements": [
+        "MATCH-001..MATCH-004",
+        "CAP-001..CAP-003"
+      ],
+      "exit": "Multiple Garmin activities can represent one logical session and one sRPE load"
+    },
+    {
+      "id": "I7",
+      "task": "APP-011",
+      "name": "Weekly evaluation, decision and adjustment",
+      "requirements": [
+        "EVAL-001..EVAL-008",
+        "DEC-001..DEC-003"
+      ],
+      "exit": "A synthetic week closes with traceable P1-P5 evidence and a human-confirmed versioned adjustment"
+    },
+    {
+      "id": "I8",
+      "task": "APP-012",
+      "name": "Dashboard, export and lifecycle",
+      "requirements": [
+        "DASH-001..DASH-003",
+        "EXP-001..EXP-002",
+        "COST-001..COST-004"
+      ],
+      "exit": "Aggregates are traceable, export remains private, the athlete dashboard stays decision-focused and free-tier consumption is guarded internally"
+    },
+    {
+      "id": "I9",
+      "task": "APP-013",
+      "name": "Hardening and production",
+      "requirements": [
+        "SEC-001..SEC-007",
+        "OPS-001..OPS-005",
+        "QLT-001..QLT-003",
+        "COST-001..COST-004",
+        "UX-007",
+        "MVP-AC-001..MVP-AC-016"
+      ],
+      "exit": "All 16 MVP acceptance criteria, iPhone Home Screen installation and standalone launch, manual restore, rollback, cold-start recovery, real-device smoke tests and seven-day USD-0 pilot pass"
+    }
+  ],
+  "gates": [
+    {
+      "id": "G0",
+      "name": "reproducibility",
+      "blocks": "I1 and any external provisioning"
+    },
+    {
+      "id": "G1",
+      "name": "data isolation",
+      "blocks": "integration provisioning and all real data"
+    },
+    {
+      "id": "G2",
+      "name": "identity and web surface",
+      "blocks": "production account and real import"
+    },
+    {
+      "id": "G3",
+      "name": "ingestion",
+      "blocks": "FIT production ingestion and operational source-of-truth use"
+    },
+    {
+      "id": "G4",
+      "name": "sports logic",
+      "blocks": "automatic weekly proposal and plan adjustment workflow"
+    },
+    {
+      "id": "G5",
+      "name": "production readiness",
+      "blocks": "declaring Supabase the sole historical source of truth or publishing any component that requires payment"
+    }
+  ],
+  "backlog": [
+    {
+      "order": 1,
+      "task": "APP-005",
+      "increments": [
+        "I0",
+        "I1"
+      ],
+      "dependsOn": [
+        "APP-004"
+      ],
+      "size": "XL"
+    },
+    {
+      "order": 2,
+      "task": "APP-008",
+      "increments": [
+        "I2"
+      ],
+      "dependsOn": [
+        "APP-005"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 3,
+      "task": "APP-009",
+      "increments": [
+        "I3"
+      ],
+      "dependsOn": [
+        "APP-008"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 4,
+      "task": "APP-006",
+      "increments": [
+        "I4"
+      ],
+      "dependsOn": [
+        "APP-005",
+        "APP-009",
+        "GAR-004"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 5,
+      "task": "APP-007",
+      "increments": [
+        "I5"
+      ],
+      "dependsOn": [
+        "APP-006",
+        "GAR-008"
+      ],
+      "size": "XL"
+    },
+    {
+      "order": 6,
+      "task": "APP-010",
+      "increments": [
+        "I6"
+      ],
+      "dependsOn": [
+        "APP-007",
+        "APP-009"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 7,
+      "task": "APP-011",
+      "increments": [
+        "I7"
+      ],
+      "dependsOn": [
+        "APP-010"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 8,
+      "task": "APP-012",
+      "increments": [
+        "I8"
+      ],
+      "dependsOn": [
+        "APP-011"
+      ],
+      "size": "L"
+    },
+    {
+      "order": 9,
+      "task": "APP-013",
+      "increments": [
+        "I9"
+      ],
+      "dependsOn": [
+        "APP-012"
+      ],
+      "size": "L"
+    }
+  ],
+  "verification": {
+    "implementationStarted": false,
+    "codeScaffolded": false,
+    "supabaseProvisioned": false,
+    "productionProvisioned": false,
+    "realDataImported": false,
+    "sourceGroupsChecked": [
+      "Microsoft and NuGet",
+      "npm package registry",
+      "GitHub official documentation",
+      "Vercel official documentation",
+      "Render official documentation",
+      "Supabase official documentation"
+    ],
+    "freePublicationValidated": true,
+    "paymentMethodRequired": false
+  }
+}

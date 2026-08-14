@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: running-performance-api
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: FreeTier__DatabaseWarningMb
+        value: "300"
+      - key: FreeTier__DatabaseBlockMb
+        value: "400"
+      - key: FreeTier__StorageWarningMb
+        value: "700"
+      - key: FreeTier__StorageBlockMb
+        value: "850"

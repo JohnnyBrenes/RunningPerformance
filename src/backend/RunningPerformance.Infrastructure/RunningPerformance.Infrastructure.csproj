@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <ProjectReference Include="../RunningPerformance.Application/RunningPerformance.Application.csproj" />
+    <ProjectReference Include="../RunningPerformance.Domain/RunningPerformance.Domain.csproj" />
+    <ProjectReference Include="../RunningPerformance.Fit/RunningPerformance.Fit.csproj" />
+  </ItemGroup>
+</Project>

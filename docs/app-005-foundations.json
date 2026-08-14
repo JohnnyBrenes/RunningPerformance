@@ -1,0 +1,88 @@
+{
+  "version": "APP-005-v1-2026-08-12",
+  "status": "completed",
+  "completedAt": "2026-08-12",
+  "dataClassification": "synthetic_only",
+  "gates": {
+    "G0_reproducibility": "passed_local_and_ci",
+    "G1_data_isolation": "passed_local_and_temporary_hosted_validation",
+    "integrationMode": "docker_local_and_ci",
+    "hostedIntegration": "not_retained_by_owner_decision"
+  },
+  "schema": {
+    "tables": 45,
+    "views": 8,
+    "ownerCompositeForeignKeys": 69,
+    "partialIndexes": 7,
+    "rlsEnabledAndForcedTables": 45,
+    "privateStorageBucket": "athlete-files"
+  },
+  "verification": {
+    "dotnetUnitTestsPassed": 8,
+    "dotnetIntegrationTestsPassed": 1,
+    "localPgtapTestsPassed": 29,
+    "remotePgtapTestsPassed": 29,
+    "vitestTestsPassed": 4,
+    "npmVulnerabilities": 0,
+    "localDatabaseLintErrors": 0,
+    "remoteDatabaseLintErrors": 0,
+    "liveHealth": "200 Healthy",
+    "readyHealth": "200 Healthy",
+    "containerMemoryMb": 512,
+    "containerCpu": 0.1,
+    "containerRunsAsNonRoot": true,
+    "billingEnabled": false
+  },
+  "localContainers": {
+    "application": [
+      "running-performance-app005"
+    ],
+    "supabaseFunctional": [
+      "db",
+      "auth",
+      "storage",
+      "rest",
+      "kong"
+    ],
+    "supabaseDevelopmentTools": [
+      "studio",
+      "pg_meta"
+    ],
+    "disabled": [
+      "edge_runtime",
+      "realtime",
+      "analytics",
+      "local_smtp",
+      "imgproxy",
+      "vector",
+      "pooler"
+    ]
+  },
+  "hostedValidationHistory": {
+    "temporaryProjectCreated": true,
+    "formerProjectName": "running-performance-integration",
+    "organization": "JohnnyBrenes",
+    "organizationPlan": "free",
+    "region": "us-east-1",
+    "postgresMajor": 17,
+    "migrationsApplied": 9,
+    "syntheticSeedApplied": true,
+    "databaseUpToDate": true,
+    "publicSignupEnabled": false,
+    "anonymousSignInEnabled": false,
+    "authStorageIsolationPassed": true,
+    "deletedAt": "2026-08-12",
+    "deletionConfirmed": true,
+    "localLinkPresent": false,
+    "existingProjectModified": false,
+    "productionCreated": false,
+    "paymentMethodAdded": false,
+    "paidComponentsEnabled": false
+  },
+  "currentHostedState": {
+    "integrationProjectExists": false,
+    "productionProjectExists": false,
+    "freeProjectSlotAvailable": true,
+    "unrelatedExistingProject": "RunningTracker"
+  }
+}

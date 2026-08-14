@@ -1,0 +1,265 @@
+{
+  "taskId": "APP-003",
+  "architectureVersion": "APP-003-v3-2026-08-14",
+  "status": "approved",
+  "style": "modular_monolith_with_hosted_background_worker_free_deployment_profile",
+  "contracts": {
+    "functional": "APP-001-v5-2026-08-14",
+    "dataModel": "APP-002-v3-2026-08-12"
+  },
+  "deployables": [
+    {
+      "name": "web",
+      "technology": ["React", "TypeScript", "Vite"],
+      "hosting": "Vercel_Hobby_free",
+      "responsibilities": ["user_experience", "forms", "calendar", "dashboard", "exercise_guidance", "iphone_home_screen_installation"]
+    },
+    {
+      "name": "backend",
+      "technology": ["ASP.NET Core", ".NET 10 LTS", "Npgsql", "Garmin.FIT.Sdk"],
+      "hosting": "Render_Free_single_Docker_web_service",
+      "logicalComponents": ["REST_API", "hosted_BackgroundService_worker"],
+      "responsibilities": ["authentication_validation", "authorization", "domain_API", "uploads", "commands", "queries", "csv_import", "fit_processing", "reprocessing", "weekly_snapshots", "exports", "reconciliation"]
+    }
+  ],
+  "managedServices": [
+    {"name": "auth", "provider": "Supabase Auth Free", "access": "web_for_session_and_api_for_verification"},
+    {"name": "database", "provider": "Supabase PostgreSQL Free", "access": "api_and_worker_through_dedicated_postgres_roles"},
+    {"name": "objectStorage", "provider": "Supabase Storage Free", "access": "private_backend_managed_objects"}
+  ],
+  "repository": {
+    "publishableRoot": "App/",
+    "web": "src/web",
+    "backendSolution": "src/backend",
+    "backendProjects": [
+      "RunningPerformance.Api",
+      "RunningPerformance.Worker",
+      "RunningPerformance.Application",
+      "RunningPerformance.Domain",
+      "RunningPerformance.Infrastructure",
+      "RunningPerformance.Fit"
+    ],
+    "database": "supabase/migrations",
+    "databaseTests": "supabase/tests/database",
+    "realDataAllowed": false
+  },
+  "frontend": {
+    "directSupabaseUse": ["authentication_only"],
+    "domainAccess": "versioned_dotnet_REST_API",
+    "serverSideOperations": ["filtering", "sorting", "cursor_pagination", "aggregations"],
+    "apiClient": "generated_from_OpenAPI",
+    "routeCodeSplitting": true,
+    "targetClients": {
+      "mobile": "Safari on the two major iOS versions currently supported by Apple",
+      "desktop": "current Chrome and Edge on PC",
+      "minimumViewportCssPx": 320,
+      "minimumTouchTargetCssPx": 44,
+      "minimumInputFontCssPxOnIos": 16,
+      "safeAreaInsets": true,
+      "primaryFlowHorizontalLayoutScroll": false,
+      "manualUpload": ["iOS Files or Share Sheet", "PC file picker or drag and drop"],
+      "installableWebAppRequired": true,
+      "webAppManifestRequired": true,
+      "standaloneDisplayRequired": true,
+      "serviceWorkerRequired": false,
+      "offlineRequired": false
+    },
+    "exerciseAssets": {
+      "location": "versioned_frontend_assets",
+      "personalData": false,
+      "databaseStores": ["uri", "position", "alt_text", "source", "license", "optional_sha256"]
+    }
+  },
+  "webAuthentication": {
+    "provider": "Supabase Auth",
+    "identifier": "email",
+    "credential": "password",
+    "publicRegistration": false,
+    "browserSession": "official_supabase_js_session_management",
+    "apiTransport": "Authorization_Bearer_access_token",
+    "apiValidation": ["signature", "issuer", "audience", "expiration", "subject", "authenticated_role"],
+    "signingKeyDiscovery": "project_JWKS_endpoint",
+    "ownerSource": "verified_sub_claim",
+    "customJWT": false,
+    "futureHardening": "BFF_with_HttpOnly_cookie_if_risk_profile_changes"
+  },
+  "synchronizerAuthentication": {
+    "usesWebPassword": false,
+    "usesWebRefreshToken": false,
+    "pairingAuthorizedBy": "authenticated_web_session",
+    "pairingTokenMaximumMinutes": 10,
+    "deviceSecretBits": 256,
+    "deviceCredentialMaximumDays": 90,
+    "scope": "fit.upload",
+    "readAccess": false,
+    "serverSecretStorage": "peppered_hash_only",
+    "windowsSecretStorage": "Windows Credential Manager",
+    "revocable": true,
+    "tables": ["sync_pairing_tokens", "sync_clients"]
+  },
+  "api": {
+    "protocol": "REST_JSON_and_streaming_multipart",
+    "prefix": "/api/v1",
+    "errors": "RFC_ProblemDetails_with_stable_code_and_correlation_id",
+    "defaultAuthorization": "authenticated",
+    "identityFromRouteOrBody": false,
+    "idempotencyRequiredFor": ["file_upload", "plan_publish", "weekly_decision", "export"],
+    "pagination": "stable_cursor",
+    "productionInteractiveOpenApi": false,
+    "health": ["/health/live", "/health/ready"]
+  },
+  "database": {
+    "domainSchema": "app_not_exposed_by_Data_API",
+    "schemaAuthority": "versioned_SQL_migrations_with_Supabase_CLI",
+    "ormMigrationAuthority": false,
+    "runtimeLibrary": "Npgsql_with_explicit_SQL_and_optional_lightweight_mapping",
+    "apiLoginRole": "rp_api_login_without_bypassrls",
+    "workerLoginRole": "rp_worker_login_with_narrow_ingestion_grants",
+    "rlsPredicate": "owner_id_equals_auth_uid",
+    "requestContext": "SET_LOCAL_verified_request_jwt_claim_sub_and_claims_inside_every_transaction",
+    "poolContextLeakTestRequired": true,
+    "serviceRoleForDomainQueries": false,
+    "connection": {
+      "persistentIpv6": "direct_connection",
+      "persistentIpv4": "Supavisor_session_mode",
+      "serverlessFuture": "transaction_pooler_with_prepared_statements_disabled"
+    }
+  },
+  "storage": {
+    "bucket": "athlete-files",
+    "public": false,
+    "pathTemplate": "owner_id/source_kind/source_file_id/safe_file_name",
+    "clientSuppliedPathAccepted": false,
+    "upsertOriginalAllowed": false,
+    "uploadPath": "client_to_API_stream_to_private_storage",
+    "download": "authenticated_API_stream_or_short_signed_URL",
+    "permanentPublicUrl": false,
+    "databaseBinary": false
+  },
+  "jobs": {
+    "queue": "PostgreSQL_ingestion_runs",
+    "productionExecution": "BackgroundService_hosted_inside_API_process",
+    "separateWorkerDeployment": false,
+    "localAndCiHost": "RunningPerformance.Worker_console_host",
+    "externalBroker": false,
+    "claim": "FOR_UPDATE_SKIP_LOCKED_with_expiring_lease",
+    "recovery": ["heartbeat", "attempt_count", "next_attempt_at", "expired_lease_requeue"],
+    "transientFailure": "bounded_retry_with_backoff",
+    "integrityOrIdentityFailure": "quarantine",
+    "csvCommit": "validate_all_460_items_then_single_transaction",
+    "fitCommit": "one_activity_and_all_detail_in_single_transaction",
+    "weeklyDecisionAutomaticPublish": false,
+    "freeServiceBehavior": {
+      "idleSpinDownMinutes": 15,
+      "coldStartApproximatelySeconds": 60,
+      "spaPollsPendingJobs": true,
+      "jobProcessingInsideHttpRequest": false,
+      "expiredLeaseRecoveredOnNextWake": true,
+      "eventualProcessingAccepted": true,
+      "artificialKeepAliveAllowed": false
+    }
+  },
+  "fit": {
+    "implementation": "extract_Tools_FitProcessor_core_into_RunningPerformance.Fit_library",
+    "validation": ["signature", "declared_size", "CRC_integrity", "SDK_full_read", "SHA256", "identity_collision"],
+    "originalImmutable": true,
+    "normalized": ["activity_fit_sessions", "activity_laps", "activity_events", "activity_time_in_zones", "activity_samples"],
+    "requestThreadProcessing": false
+  },
+  "security": {
+    "https": true,
+    "hstsProduction": true,
+    "cors": "configured_Vercel_origins_only",
+    "csp": "strict_no_untrusted_inline_HTML_or_scripts",
+    "secrets": "hosting_secret_stores_only",
+    "publicFrontendConfiguration": ["Supabase_URL", "Supabase_publishable_key", "API_base_URL"],
+    "sensitiveLogsAllowed": false,
+    "fileStreaming": true,
+    "fileSizeAndMagicValidation": true,
+    "auditAppendOnly": true
+  },
+  "observability": {
+    "standard": "OpenTelemetry",
+    "correlationIdPropagated": true,
+    "minimumSignals": [
+      "api_latency_and_errors",
+      "job_state_age_and_attempts",
+      "quarantine_count",
+      "reconciliation_counts",
+      "database_connections",
+      "sample_and_storage_growth",
+      "free_quota_consumption"
+    ],
+    "coldStartVisibleToUser": true,
+    "keepAliveMonitorAllowed": false,
+    "freeOnly": true,
+    "components": ["provider_free_logs", "health_endpoints", "in_app_job_and_quota_dashboard"],
+    "paidMonitoringAllowed": false
+  },
+  "environments": {
+    "local": "Supabase_CLI_stack_and_synthetic_seed",
+    "integration": "second_free_Supabase_project_and_sleeping_Render_free_service_for_smoke_only",
+    "production": "free_Supabase_project_and_single_Render_free_API_hosted_worker_service",
+    "productionDataInLocalOrCI": false,
+    "persistentPaidPreviewEnvironment": false,
+    "manualBackup": "local_supabase_db_dump_plus_private_storage_export_outside_Git"
+  },
+  "testing": {
+    "domain": ["source_precedence", "identity", "P1_to_P5", "sRPE", "plan_adjustments"],
+    "database": ["constraints", "RLS_two_owners", "immutability", "functions", "storage_policies"],
+    "api": ["JWT", "owner_derivation", "idempotency", "pagination", "file_limits", "problem_details"],
+    "worker": ["leases", "retries", "CSV_reconciliation", "FIT_atomicity", "reprocessing"],
+    "web": ["forms", "loading_error_empty_states", "accessibility", "iphone_pc_adaptation", "iphone_install_metadata", "exercise_text_without_image"],
+    "e2e": ["login", "today_session", "plan", "synthetic_upload", "activity", "checkin", "dashboard", "evaluation", "decision", "sync_revocation", "web_app_manifest"],
+    "browserMatrix": ["iPhone Safari mobile viewport, Home Screen installation and real-device launch smoke test", "PC Chrome desktop viewport", "PC Edge desktop viewport"]
+  },
+  "rejected": [
+    "browser_direct_domain_table_access",
+    "service_role_for_all_domain_queries",
+    "custom_user_JWT_and_password_store",
+    "web_password_or_refresh_token_in_synchronizer",
+    "parallel_EF_and_Supabase_migration_histories",
+    "Supabase_Edge_Function_domain_split",
+    "microservices_and_external_job_broker",
+    "FIT_or_canonical_JSON_in_single_PostgreSQL_row",
+    "FIT_processing_inside_HTTP_request",
+    "direct_migration_of_legacy_RunningProject",
+    "Railway_Hobby_or_paid_Render_worker",
+    "artificial_keep_alive_pings_to_avoid_free_spin_down"
+  ],
+  "hostingRequirements": [
+    "dotnet_10_container",
+    "hosted_worker_inside_API_with_lease_recovery",
+    "managed_secrets",
+    "HTTPS_and_free_provider_domain",
+    "health_checks",
+    "rollback_or_safe_deploy",
+    "structured_logs",
+    "outbound_access_to_Supabase",
+    "region_near_Supabase",
+    "mandatory_monthly_cost_USD_0",
+    "no_paid_trial_addon_or_automatic_upgrade",
+    "quota_exhaustion_suspends_instead_of_billing"
+  ],
+  "officialReferences": [
+    "https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core",
+    "https://supabase.com/docs/guides/auth/signing-keys",
+    "https://supabase.com/docs/guides/database/postgres/row-level-security",
+    "https://supabase.com/docs/guides/database/connecting-to-postgres",
+    "https://supabase.com/docs/guides/storage/security/access-control",
+    "https://supabase.com/docs/guides/local-development/database-migrations",
+    "https://supabase.com/docs/guides/local-development/testing/overview",
+    "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0",
+    "https://vercel.com/docs/plans/hobby",
+    "https://render.com/docs/free",
+    "https://render.com/docs/docker",
+    "https://render.com/docs/health-checks",
+    "https://supabase.com/pricing",
+    "https://supabase.com/docs/guides/platform/backups",
+    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "https://www.w3.org/TR/appmanifest/",
+    "https://developer.apple.com/videos/play/wwdc2022/10048/"
+  ],
+  "nextTask": "APP-004",
+  "nextTaskActivated": false
+}

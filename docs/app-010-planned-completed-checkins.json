@@ -1,0 +1,70 @@
+{
+  "version": "APP-010-v1-2026-08-13",
+  "status": "completed",
+  "completedAt": "2026-08-13",
+  "increment": "I6",
+  "summary": "Planificado-realizado, agrupación de varias actividades en una sesión lógica, cinco estados TRN-003, check-ins y sRPE quedaron operativos de punta a punta con datos sintéticos.",
+  "linking": {
+    "automaticProposalRequiresUniqueCandidate": true,
+    "manualSelection": true,
+    "multipleActivitiesPerLogicalSession": true,
+    "oneActiveLinkPerActivity": true,
+    "historyPreserved": true,
+    "versionField": "supersedes_id",
+    "activeStatuses": ["proposed", "confirmed"],
+    "historicalStatuses": ["withdrawn", "rejected"]
+  },
+  "outcomes": {
+    "statuses": [
+      "completed_as_planned",
+      "completed_modified",
+      "valid_substitution",
+      "not_completed",
+      "optional_not_completed"
+    ],
+    "reasonRequiredFor": ["completed_modified", "valid_substitution", "not_completed"],
+    "optionalStatusRestrictedToOptionalSession": true
+  },
+  "checkins": {
+    "windows": ["immediate", "24h", "48h"],
+    "sessionRpeOnlyImmediate": true,
+    "recoveryResponses": ["normal", "incomplete", "adverse"],
+    "unknownRemainsNull": true,
+    "componentsRemainSeparate": true
+  },
+  "logicalLoad": {
+    "formula": "sum(confirmed activity duration minutes) * one immediate session RPE",
+    "countsOncePerPlannedSession": true,
+    "syntheticActivityCount": 2,
+    "syntheticDurationMinutes": 25,
+    "syntheticSessionRpe": 5,
+    "syntheticSrpe": 125
+  },
+  "apiOperations": [
+    "GetSessionCompletion",
+    "CreateAutomaticSessionLinkProposal",
+    "LinkSessionActivity",
+    "ChangeSessionActivityLink",
+    "SavePlannedSessionOutcome",
+    "SaveSessionCheckin"
+  ],
+  "verification": {
+    "databaseMigrations": 15,
+    "databaseLintErrors": 0,
+    "pgtapPassed": 95,
+    "dotnetUnitPassed": 13,
+    "dotnetIntegrationPassed": 2,
+    "dotnetBuildWarnings": 0,
+    "vitestPassed": 9,
+    "typescriptPassed": true,
+    "viteProductionBuild": true,
+    "playwrightPassed": 9,
+    "playwrightProfiles": ["chromium_320", "webkit_390", "chromium_desktop"],
+    "apiReadyStatus": 200
+  },
+  "productionModified": false,
+  "realDataImported": false,
+  "paidComponentsEnabled": false,
+  "nextTask": "APP-011",
+  "nextTaskActivated": false
+}

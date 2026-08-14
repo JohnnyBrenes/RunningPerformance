@@ -1,0 +1,81 @@
+{
+  "version": "APP-009-v1-2026-08-12",
+  "status": "completed",
+  "completedAt": "2026-08-12",
+  "increment": "I3",
+  "summary": "Catálogo accesible, variantes visuales por sexo de perfil y plan semanal versionado quedaron operativos de punta a punta en Supabase local Docker.",
+  "profilePresentation": {
+    "values": ["female", "male", "unspecified"],
+    "affectsPrescription": false,
+    "syntheticAthleteA": "male",
+    "syntheticAthleteB": "female"
+  },
+  "catalog": {
+    "exerciseCount": 4,
+    "illustratedExerciseCount": 4,
+    "textOnlyContractTestedWithTemporaryRow": true,
+    "finalAssetCount": 8,
+    "assetDimensions": "1024x1024",
+    "mimeType": "image/png",
+    "metadata": ["position", "asset_uri", "alt_text", "mime_type", "source", "author", "license", "sha256", "presentation_sex", "width_px", "height_px"],
+    "assets": [
+      "src/web/public/assets/exercises/goblet-squat-male-v1.png",
+      "src/web/public/assets/exercises/goblet-squat-female-v1.png",
+      "src/web/public/assets/exercises/romanian-deadlift-male-v1.png",
+      "src/web/public/assets/exercises/romanian-deadlift-female-v1.png",
+      "src/web/public/assets/exercises/side-plank-male-v1.png",
+      "src/web/public/assets/exercises/side-plank-female-v1.png",
+      "src/web/public/assets/exercises/ankle-pogos-male-v1.png",
+      "src/web/public/assets/exercises/ankle-pogos-female-v1.png"
+    ],
+    "generation": {
+      "skill": "imagegen",
+      "mode": ["generate", "edit"],
+      "style": "scientific-educational two-position editorial fitness illustration",
+      "constraints": ["safe technique", "full body", "no text", "no logos", "male and female variants"]
+    }
+  },
+  "versioning": {
+    "publishedContentMutable": false,
+    "draftContentMutable": true,
+    "narrowFunctions": ["app.clone_training_plan_draft", "app.publish_training_plan_version"],
+    "auditEvents": ["training_plan.draft_cloned", "training_plan.version_published", "training_plan.session_updated"],
+    "validatedPublishedVersion": 2,
+    "retainedVersionCount": 2
+  },
+  "features": [
+    "exercise_catalog",
+    "accessible_exercise_guides",
+    "profile_selected_visual_variant",
+    "weekly_calendar",
+    "today_session",
+    "ordered_blocks_and_dosage",
+    "draft_clone_and_edit",
+    "immutable_publish_history",
+    "mobile_logout"
+  ],
+  "verification": {
+    "databaseMigrations": 11,
+    "databaseLintErrors": 0,
+    "pgtapPassed": 57,
+    "dotnetUnitPassed": 8,
+    "dotnetIntegrationPassed": 2,
+    "vitestPassed": 7,
+    "playwrightPassed": 9,
+    "playwrightProfiles": ["chromium_320", "webkit_390", "chromium_desktop"],
+    "dotnetBuildWarnings": 0,
+    "viteProductionBuild": true,
+    "apiReadyStatus": 200
+  },
+  "operations": {
+    "webUrl": "http://127.0.0.1:5173",
+    "apiUrl": "http://127.0.0.1:5080",
+    "databaseMode": "supabase_local_docker",
+    "migrationAppliedWithoutReset": true
+  },
+  "productionCreated": false,
+  "realDataImported": false,
+  "paidComponentsEnabled": false,
+  "nextTask": "APP-006",
+  "nextTaskActivated": false
+}

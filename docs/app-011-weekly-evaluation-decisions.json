@@ -1,0 +1,60 @@
+{
+  "version": "APP-011-v1-2026-08-13",
+  "status": "completed",
+  "completedAt": "2026-08-13",
+  "increment": "I7",
+  "summary": "La evaluación semanal P1-P5, el semáforo explicable, la evidencia navegable, la decisión humana auditada y el ajuste mediante una nueva versión borrador quedaron operativos de punta a punta con datos sintéticos.",
+  "snapshot": {
+    "format": "TRN-003-v1-2026-08-11",
+    "immutable": true,
+    "pillars": ["P1", "P2", "P3", "P4", "P5"],
+    "trafficLights": ["green", "yellow", "red"],
+    "worstSignalWins": true,
+    "missingRemainsNull": true,
+    "evidenceNavigable": true
+  },
+  "decision": {
+    "humanConfirmationRequired": true,
+    "allowed": ["execute", "adapt", "reduce", "stop"],
+    "narrativeFields": ["decision", "reason", "risks", "followUp"],
+    "audited": true,
+    "automaticPlanMutation": false
+  },
+  "adjustment": {
+    "requiredFor": ["adapt", "reduce"],
+    "forbiddenFor": ["execute", "stop"],
+    "createsDraftPlanVersion": true,
+    "publishedVersionsRemainImmutable": true,
+    "exactBeforeAfterStored": true
+  },
+  "apiPaths": [
+    "GET /api/v1/evaluations",
+    "GET /api/v1/evaluations/{evaluationId}",
+    "POST /api/v1/evaluations/snapshots",
+    "POST /api/v1/evaluations/{evaluationId}/decisions"
+  ],
+  "verification": {
+    "databaseMigrations": 16,
+    "databaseLintErrors": 0,
+    "pgtapPassed": 111,
+    "schemaTables": 45,
+    "schemaViews": 9,
+    "dotnetUnitPassed": 20,
+    "dotnetIntegrationPassed": 2,
+    "dotnetBuildWarnings": 0,
+    "vitestPassed": 12,
+    "typescriptPassed": true,
+    "viteProductionBuild": true,
+    "playwrightPassed": 10,
+    "playwrightSkippedByProfile": 2,
+    "playwrightProfiles": ["chromium_320", "webkit_390", "chromium_desktop"],
+    "apiReadyStatus": 200
+  },
+  "productionModified": false,
+  "realDataImported": false,
+  "garminActivitiesModified": false,
+  "paidComponentsEnabled": false,
+  "nextTask": "APP-012",
+  "nextTaskActivated": false,
+  "monitoringTaskModified": false
+}

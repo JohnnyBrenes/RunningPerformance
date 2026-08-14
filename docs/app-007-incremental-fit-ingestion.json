@@ -1,0 +1,73 @@
+{
+  "version": "APP-007-v1-2026-08-13",
+  "task": "APP-007",
+  "increment": "I5",
+  "status": "completed",
+  "completedAt": "2026-08-13",
+  "environment": "local_synthetic_only",
+  "pipeline": {
+    "inputs": ["manual_fit", "fit.upload_sync_client"],
+    "staging": ["bounded_stream", "fit_signature", "sha256"],
+    "validation": ["stored_size", "stored_sha256", "fit_signature", "crc_integrity", "full_sdk_read"],
+    "publication": ["summary", "sessions", "laps", "events", "zones", "batched_samples"],
+    "atomic": true,
+    "sampleBatchSize": 500
+  },
+  "identity": {
+    "externalKey": "garmin_activity_id_from_download_context",
+    "duplicate": "same_id_same_hash",
+    "quarantine": ["same_id_different_hash", "same_hash_different_id", "ambiguous_historical_match"],
+    "historicalMatch": {
+      "localStart": "exact_second",
+      "category": "equal",
+      "durationToleranceSeconds": 2,
+      "distanceTolerance": "max(20m,0.2%)",
+      "requiresUniqueCandidate": true
+    }
+  },
+  "syncCredential": {
+    "pairingSingleUse": true,
+    "pairingMinutes": 10,
+    "secretBits": 256,
+    "scope": "fit.upload",
+    "credentialDays": 90,
+    "revocable": true,
+    "windowsCredentialManager": true,
+    "storedHash": "HMAC-SHA-256"
+  },
+  "verification": {
+    "databaseLintErrors": 0,
+    "pgTapPassed": 81,
+    "dotnetUnitPassed": 13,
+    "dotnetIntegrationPassed": 2,
+    "vitestPassed": 7,
+    "dotnetBuildWarnings": 0,
+    "viteProductionBuild": true,
+    "dockerBuild": true,
+    "syntheticEndToEnd": {
+      "firstRun": "succeeded",
+      "idempotentRetryReusedReceipt": true,
+      "reprocess": "succeeded",
+      "collision": "quarantined",
+      "activities": 1,
+      "samples": 11,
+      "sourceFiles": 2,
+      "ingestionRuns": 3,
+      "processingAttempts": 3,
+      "currentAttempts": 1
+    },
+    "realFitUsed": false,
+    "productionModified": false,
+    "paidComponentsEnabled": false
+  },
+  "artifacts": {
+    "migration": "App/supabase/migrations/0130_incremental_fit_ingestion.sql",
+    "processor": "App/src/backend/RunningPerformance.Fit/CanonicalFitProcessor.cs",
+    "normalizer": "App/src/backend/RunningPerformance.Fit/FitActivityNormalizer.cs",
+    "worker": "App/src/backend/RunningPerformance.Infrastructure/FitIngestionQueue.cs",
+    "syncClient": "App/scripts/Sync-GarminFit.ps1",
+    "report": "App/docs/app-007-incremental-fit-ingestion.md"
+  },
+  "nextTask": "APP-010",
+  "nextTaskActivated": false
+}

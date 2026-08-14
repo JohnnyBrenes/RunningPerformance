@@ -1,0 +1,127 @@
+{
+  "taskId": "APP-001",
+  "version": "APP-001-v5-2026-08-14",
+  "status": "approved",
+  "product": "Running Performance App",
+  "initialUserScope": "single_athlete",
+  "databaseTarget": "Supabase PostgreSQL",
+  "technologyConstraints": [
+    "React",
+    "C#/.NET",
+    "Supabase PostgreSQL"
+  ],
+  "targetClients": {
+    "mobile": "Safari on iPhone",
+    "desktop": "Chrome and Edge on PC",
+    "design": "mobile_first_responsive",
+    "minimumTouchTargetCssPx": 44,
+    "horizontalScrollInPrimaryFlowsAllowed": false,
+    "homeScreenInstallationRequiredForMvp": true,
+    "standaloneDisplayRequiredForMvp": true,
+    "offlineOperationRequiredForMvp": false
+  },
+  "actors": [
+    "athlete",
+    "local_garmin_synchronizer",
+    "athlete_as_operator"
+  ],
+  "mvpCapabilities": [
+    "authentication",
+    "athlete_profile",
+    "target_races_and_versioned_goals",
+    "versioned_training_plan",
+    "versioned_exercise_guidance_with_images",
+    "historical_csv_import",
+    "incremental_and_manual_fit_ingestion",
+    "activity_history_and_detail",
+    "planned_vs_completed_linking",
+    "manual_subjective_capture",
+    "weekly_P1_to_P5_evaluation",
+    "audited_plan_adjustments",
+    "dashboard_and_comparable_trends",
+    "athlete_data_export",
+    "github_safe_source_repository",
+    "zero_mandatory_cost_publication",
+    "iphone_home_screen_installation"
+  ],
+  "deferredCapabilities": [
+    "evidence_based_ai_assistance_with_human_approval",
+    "shoe_and_equipment_catalog",
+    "advanced_route_maps",
+    "automated_longitudinal_sleep_hrv_stress_ingestion",
+    "notifications",
+    "offline_operation",
+    "complete_bilingual_experience"
+  ],
+  "outOfScope": [
+    "multi_athlete_or_social_features",
+    "medical_diagnosis",
+    "automatic_unapproved_plan_changes",
+    "private_garmin_apis_or_stored_garmin_credentials",
+    "automated_mfa_or_captcha",
+    "full_garmin_account_export",
+    "third_party_data_provider_as_primary_source",
+    "direct_treadmill_outdoor_pace_comparison",
+    "heart_rate_based_prescription_until_validated"
+  ],
+  "requirementGroups": {
+    "identity": ["AUTH-001", "AUTH-002", "AUTH-003", "AUTH-004", "AUTH-005"],
+    "profileAndRaces": ["PRO-001", "PRO-002", "RACE-001", "RACE-002"],
+    "plan": ["PLAN-001", "PLAN-002", "PLAN-003", "PLAN-004"],
+    "exerciseGuidance": ["EXE-001", "EXE-002", "EXE-003"],
+    "activities": ["ACT-001", "ACT-002", "ACT-003", "ACT-004", "ACT-005"],
+    "historicalImport": ["CSV-001", "CSV-002", "CSV-003"],
+    "fitIngestion": ["FIT-001", "FIT-002", "FIT-003", "FIT-004", "FIT-005", "FIT-006", "FIT-007"],
+    "plannedVsCompleted": ["MATCH-001", "MATCH-002", "MATCH-003", "MATCH-004"],
+    "capture": ["CAP-001", "CAP-002", "CAP-003"],
+    "weeklyEvaluation": ["EVAL-001", "EVAL-002", "EVAL-003", "EVAL-004", "EVAL-005", "EVAL-006", "EVAL-007", "EVAL-008"],
+    "decisionAndDashboard": ["DEC-001", "DEC-002", "DEC-003", "DASH-001", "DASH-002", "DASH-003"],
+    "export": ["EXP-001", "EXP-002"]
+  },
+  "nonFunctionalGroups": {
+    "security": ["SEC-001", "SEC-002", "SEC-003", "SEC-004", "SEC-005", "SEC-006", "SEC-007"],
+    "dataIntegrity": ["DAT-001", "DAT-002", "DAT-003", "DAT-004", "DAT-005"],
+    "operations": ["OPS-001", "OPS-002", "OPS-003", "OPS-004", "OPS-005"],
+    "experience": ["UX-001", "UX-002", "UX-003", "UX-004", "UX-005", "UX-006", "UX-007"],
+    "quality": ["QLT-001", "QLT-002", "QLT-003"],
+    "publicationCost": ["COST-001", "COST-002", "COST-003", "COST-004"]
+  },
+  "publicationPolicy": {
+    "mandatoryMonthlyCostUsd": 0,
+    "freePlansOnly": true,
+    "paidTrialsAllowed": false,
+    "paidAddonsAllowed": false,
+    "paidCustomDomainRequired": false,
+    "automaticUpgradeAllowed": false,
+    "paymentMethodRequiredByProjectPolicy": false,
+    "quotaExhaustionPolicy": "warn_then_degrade_pause_or_block_without_charge",
+    "paidChangeRequiresExplicitUserDecisionAndNewPlanVersion": true
+  },
+  "sourcePrecedence": {
+    "externalIdentity": "garmin_activity_id_from_download_context",
+    "historicalSummary": "normalized_activities_csv",
+    "deviceRecordedDetail": "validated_original_fit",
+    "consolidatedHistory": "supabase_postgresql_after_implementation",
+    "conflictPolicy": "preserve_both_sources_and_require_review",
+    "missingFitPolicy": "never_erase_existing_csv_value"
+  },
+  "githubPolicy": {
+    "publishableRoot": "App/",
+    "workspaceRootPublishable": false,
+    "realAthleteDataAllowed": false,
+    "secretsAllowed": false,
+    "syntheticFixturesOnly": true,
+    "nonPersonalLicensedExerciseAssetsAllowed": true,
+    "privateRepositoryAllowsSensitiveData": false,
+    "prePushGates": [
+      "secret_and_personal_data_scan",
+      "frontend_and_backend_build",
+      "tests",
+      "migration_validation",
+      "dependency_audit"
+    ]
+  },
+  "mvpAcceptanceCount": 16,
+  "nextTask": "APP-002",
+  "nextTaskActivated": false
+}

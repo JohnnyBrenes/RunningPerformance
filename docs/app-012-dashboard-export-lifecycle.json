@@ -1,0 +1,74 @@
+{
+  "id": "APP-012-v2-2026-08-13",
+  "task": "APP-012",
+  "increment": "I8",
+  "status": "completed",
+  "completedAt": "2026-08-13",
+  "summary": "Dashboard práctico con tendencias navegables y gestión privada de datos relegada al perfil.",
+  "experience": {
+    "defaultWindowWeeks": 4,
+    "supportedWindowsWeeks": [4, 8, 12],
+    "dashboardFocus": [
+      "next_session",
+      "weekly_progress",
+      "recovery",
+      "next_race",
+      "weekly_distance",
+      "current_to_goal_pace",
+      "weekly_review",
+      "pending_actions"
+    ],
+    "activityHistoryRoute": "/activities",
+    "dataManagementRoute": "/profile",
+    "freeTierConsumptionVisibleOnAthleteDashboard": false,
+    "raceTimezoneControl": "iana_selection",
+    "raceLocationControl": "optional_bounded_text",
+    "raceEditingMode": "selected_record_only_for_race_and_goal"
+  },
+  "localTestData": {
+    "owner": "athlete-a@example.invalid",
+    "csvRecords": 460,
+    "supportActivities": 3,
+    "totalActivities": 463,
+    "runningActivities": 298,
+    "productionModified": false,
+    "garminActivitiesModified": false
+  },
+  "export": {
+    "format": "json",
+    "private": true,
+    "expiresHours": 24,
+    "publicUrl": false,
+    "authenticatedDownload": true,
+    "idempotentCreation": true
+  },
+  "lifecycle": {
+    "requestTypes": ["archive", "delete"],
+    "humanReviewRequired": true,
+    "automaticMutation": false,
+    "audited": true
+  },
+  "verification": {
+    "databaseMigrations": 17,
+    "databaseLintErrors": 0,
+    "pgTapPassed": 129,
+    "schemaTables": 45,
+    "schemaViews": 9,
+    "dotnetUnitPassed": 39,
+    "dotnetIntegrationPassed": 2,
+    "dotnetBuildWarnings": 0,
+    "vitestPassed": 17,
+    "typescriptPassed": true,
+    "viteProductionBuild": true,
+    "playwrightPassed": 11,
+    "playwrightSkippedByProfile": 4,
+    "playwrightProfiles": ["chromium_320", "webkit_390", "chromium_desktop"]
+  },
+  "artifacts": {
+    "migration": "App/supabase/migrations/0160_dashboard_export_lifecycle.sql",
+    "report": "App/docs/app-012-dashboard-export-lifecycle.md",
+    "structured": "App/docs/app-012-dashboard-export-lifecycle.json"
+  },
+  "nextTaskAfterCompletion": "APP-013",
+  "nextTaskActivated": false
+}

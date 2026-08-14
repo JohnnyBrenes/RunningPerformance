@@ -1,0 +1,260 @@
+{
+  "taskId": "APP-002",
+  "modelVersion": "APP-002-v3-2026-08-12",
+  "status": "approved",
+  "databaseTarget": "Supabase PostgreSQL",
+  "functionalContract": "APP-001-v4-2026-08-12",
+  "scope": "logical_model_only",
+  "implementationDeferredTo": "APP-005",
+  "principles": [
+    "owner_isolation_by_rls_and_composite_foreign_keys",
+    "idempotent_csv_and_fit_ingestion",
+    "field_level_provenance_for_consolidated_activity_data",
+    "immutable_source_objects_and_versioned_domain_records",
+    "null_represents_missing_data",
+    "queryable_typed_metrics_with_canonical_units",
+    "fit_original_is_reprocessable_and_fit_canonical_json_is_not_one_database_row",
+    "free_tier_quota_exhaustion_blocks_ingestion_instead_of_enabling_billing"
+  ],
+  "identity": {
+    "internalKey": "uuid_generated_by_postgresql",
+    "ownerKey": "auth.users.id",
+    "historicalKey": "provisional_activity_key",
+    "externalKey": "garmin_activity_id_from_download_context",
+    "contentKey": "sha256",
+    "uniqueRules": [
+      "one_non_null_provisional_activity_key_per_owner",
+      "one_non_null_garmin_activity_id_per_owner",
+      "one_stored_blob_per_owner_and_sha256",
+      "same_garmin_id_with_different_hash_is_quarantined",
+      "same_hash_claimed_by_different_garmin_ids_requires_review"
+    ]
+  },
+  "canonicalUnits": {
+    "distance": "m",
+    "duration": "s",
+    "pace": "s/km",
+    "speed": "m/s",
+    "heartRate": "bpm",
+    "power": "W",
+    "temperature": "degC",
+    "missing": null
+  },
+  "tableGroups": [
+    {
+      "name": "identity_profile_races",
+      "tables": [
+        {"name": "athlete_profiles", "key": "owner_id", "purpose": "private athlete profile and preferences"},
+        {"name": "athlete_health_contexts", "key": "id", "purpose": "private injury, discomfort and restriction context"},
+        {"name": "target_races", "key": "id", "purpose": "stable race identity"},
+        {"name": "race_goal_versions", "key": "id", "purpose": "immutable versioned race objectives"}
+      ]
+    },
+    {
+      "name": "exercise_guidance",
+      "tables": [
+        {"name": "exercises", "key": "id", "purpose": "owner-scoped exercise catalog"},
+        {"name": "exercise_revisions", "key": "id", "purpose": "immutable short technique and safety guidance"},
+        {"name": "exercise_media", "key": "id", "purpose": "zero to two ordered accessible images per exercise revision"}
+      ]
+    },
+    {
+      "name": "synchronizer_credentials",
+      "tables": [
+        {"name": "sync_clients", "key": "id", "purpose": "revocable device credential limited to FIT upload"},
+        {"name": "sync_pairing_tokens", "key": "id", "purpose": "single-use ten-minute web-authorized pairing token"}
+      ]
+    },
+    {
+      "name": "training_plan",
+      "tables": [
+        {"name": "training_plans", "key": "id", "purpose": "stable training cycle identity"},
+        {"name": "training_plan_versions", "key": "id", "purpose": "immutable plan snapshots"},
+        {"name": "planned_sessions", "key": "id", "purpose": "dated session prescriptions"},
+        {"name": "planned_session_blocks", "key": "id", "purpose": "ordered warmup, main, cooldown or circuit blocks"},
+        {"name": "planned_session_exercises", "key": "id", "purpose": "sets, reps, time, rest, load, RPE or RIR prescriptions"}
+      ]
+    },
+    {
+      "name": "activity_summary_and_provenance",
+      "tables": [
+        {"name": "activities", "key": "id", "purpose": "one consolidated logical activity"},
+        {"name": "metric_definitions", "key": "id", "purpose": "controlled typed optional metric catalog"},
+        {"name": "activity_metric_values", "key": "id", "purpose": "canonical optional activity metrics"},
+        {"name": "activity_source_observations", "key": "id", "purpose": "small per-source summary and link evidence"},
+        {"name": "activity_field_sources", "key": "id", "purpose": "selected source for each consolidated field"}
+      ]
+    },
+    {
+      "name": "ingestion_and_quarantine",
+      "tables": [
+        {"name": "stored_objects", "key": "id", "purpose": "immutable private blob locator and hash"},
+        {"name": "source_files", "key": "id", "purpose": "logical receipt and declared source context"},
+        {"name": "ingestion_runs", "key": "id", "purpose": "auditable resumable operation"},
+        {"name": "ingestion_items", "key": "id", "purpose": "per-row or per-file result"},
+        {"name": "fit_processing_attempts", "key": "id", "purpose": "versioned validation and extraction outcome"},
+        {"name": "fit_processing_warnings", "key": "id", "purpose": "aggregated parser warnings"},
+        {"name": "fit_schema_observations", "key": "id", "purpose": "known and unknown FIT field definitions"},
+        {"name": "quarantine_cases", "key": "id", "purpose": "preserved conflicts, ambiguity and validation failures"}
+      ]
+    },
+    {
+      "name": "normalized_fit_detail",
+      "tables": [
+        {"name": "activity_fit_sessions", "key": "id", "purpose": "FIT sessions"},
+        {"name": "activity_laps", "key": "id", "purpose": "ordered FIT laps"},
+        {"name": "activity_events", "key": "id", "purpose": "ordered FIT events"},
+        {"name": "activity_time_in_zones", "key": "id", "purpose": "one row per zone bucket"},
+        {"name": "activity_samples", "key": "activity_id_and_sample_index", "purpose": "typed FIT record samples with limited additional fields"}
+      ]
+    },
+    {
+      "name": "planned_completed_capture",
+      "tables": [
+        {"name": "activity_session_links", "key": "id", "purpose": "versioned automatic or manual activity-to-plan links"},
+        {"name": "planned_session_outcomes", "key": "id", "purpose": "TRN-003 execution status including omitted sessions"},
+        {"name": "session_checkins", "key": "id", "purpose": "post-session, 24-hour and 48-hour subjective values"}
+      ]
+    },
+    {
+      "name": "evaluation_decision_audit",
+      "tables": [
+        {"name": "weekly_evaluations", "key": "id", "purpose": "provisional or final weekly evaluation"},
+        {"name": "weekly_evaluation_sessions", "key": "id", "purpose": "session sources frozen into the evaluation"},
+        {"name": "weekly_metric_values", "key": "id", "purpose": "typed P1-P5 and context components"},
+        {"name": "weekly_metric_evidence", "key": "id", "purpose": "drill-down from aggregate to one source"},
+        {"name": "weekly_decisions", "key": "id", "purpose": "human-confirmed decision narrative"},
+        {"name": "plan_adjustments", "key": "id", "purpose": "exact before and after changes linked to a decision"},
+        {"name": "notes", "key": "id", "purpose": "private notes with one domain target"},
+        {"name": "audit_events", "key": "id", "purpose": "append-only sensitive and operational audit"},
+        {"name": "export_jobs", "key": "id", "purpose": "documented athlete export generation and retention"},
+        {"name": "lifecycle_requests", "key": "id", "purpose": "explicit archive or delete workflow"}
+      ]
+    }
+  ],
+  "tableCount": 45,
+  "exerciseGuidance": {
+    "appliesTo": ["strength", "mobility", "plyometrics"],
+    "orderedPrescriptionFields": [
+      "sets",
+      "repetitions_min_max",
+      "duration_seconds",
+      "rest_seconds",
+      "load_and_unit",
+      "target_rpe_or_rir",
+      "tempo",
+      "side",
+      "note"
+    ],
+    "revisionFields": ["display_name", "brief_description", "setup", "execution", "safety_cues"],
+    "imageMinimum": 0,
+    "imageMaximum": 2,
+    "imageMetadata": ["position", "asset_uri", "alt_text", "mime_type", "source", "author", "license", "sha256"],
+    "binaryInPostgres": false,
+    "textWorksWithoutImages": true
+  },
+  "sourcePrecedence": [
+    {"data": "garmin_activity_id", "preferred": "download_context", "rule": "never infer from FIT binary"},
+    {"data": "historical_summary", "preferred": "normalized_csv", "rule": "retain Connect-derived fields absent from FIT"},
+    {"data": "device_recorded_summary_and_detail", "preferred": "validated_fit", "rule": "only present values may supersede consolidated recorded fields"},
+    {"data": "subjective_capture", "preferred": "explicit_athlete_input", "rule": "never impute retrospectively"},
+    {"data": "plan_change", "preferred": "confirmed_weekly_decision", "rule": "recommendations cannot mutate published plans"}
+  ],
+  "fitStorage": {
+    "original": "private_supabase_storage_object",
+    "databaseBinaryColumn": false,
+    "canonicalJsonAsSingleRow": false,
+    "normalized": ["sessions", "laps", "events", "time_in_zones", "record_samples"],
+    "unknownData": "store schema observations and warning aggregates; reprocess immutable original for future semantics",
+    "reprocessing": "stage_validate_and_atomically_swap_current_derived_rows"
+  },
+  "storage": {
+    "privateBucketProposal": "athlete-files",
+    "privatePrefixes": ["owner_uuid/csv", "owner_uuid/fit", "owner_uuid/export"],
+    "quarantine": "database state and restricted processing; object remains preserved",
+    "exerciseAssets": "versioned frontend or CDN assets with no personal data and compatible license",
+    "publicPersonalObjectsAllowed": false
+  },
+  "security": {
+    "rlsRequired": true,
+    "rlsForced": true,
+    "basePredicate": "owner_id = auth.uid()",
+    "ownerFromClientAccepted": false,
+    "crossOwnerForeignKeys": "prevented_by_composite_owner_foreign_keys",
+    "appendOnly": [
+      "published_training_plan_versions",
+      "effective_race_goal_versions",
+      "used_exercise_revisions",
+      "accepted_source_objects",
+      "audit_events"
+    ],
+    "serviceRole": "backend_only_with_explicit_owner_scope_and_correlation_id",
+    "synchronizer": {
+      "scope": "fit.upload",
+      "pairingTokenMaximumMinutes": 10,
+      "deviceSecretBits": 256,
+      "deviceCredentialMaximumDays": 90,
+      "serverStorage": "peppered_hash_only",
+      "localStorage": "Windows Credential Manager",
+      "readAccess": false
+    }
+  },
+  "sampleCapacity": {
+    "initialPartitioning": false,
+    "primaryAccess": "activity_id_and_sample_index",
+    "timeIndex": "activity_id_and_recorded_at_utc",
+    "reconsiderPartitionAtRows": 10000000,
+    "reconsiderPartitionAtTableSizeGb": 5,
+    "initialRetention": "retain while source-of-truth and storage policy allow",
+    "freeTierGuardrails": {
+      "databaseWarningMb": 300,
+      "databaseDetailedImportBlockMb": 400,
+      "storageWarningMb": 700,
+      "storageUploadBlockMb": 850,
+      "onThreshold": "warn_degrade_or_pause_without_enabling_billing",
+      "derivedSamplePruning": "only_after_tested_rebuild_from_immutable_fit_and_explicit_audit"
+    }
+  },
+  "plannedViews": [
+    "v_activity_history",
+    "v_activity_srpe",
+    "v_planned_vs_completed",
+    "v_weekly_running",
+    "v_weekly_p1_to_p5_sources",
+    "v_current_race_goals",
+    "v_current_training_plan",
+    "v_current_exercise_revisions"
+  ],
+  "criticalChecks": [
+    "missing_values_are_null",
+    "typed_value_tables_have_exactly_one_value_column",
+    "session_rpe_1_to_10",
+    "pain_and_fatigue_0_to_10",
+    "sleep_quality_1_to_5",
+    "perceived_recovery_0_to_10",
+    "week_starts_monday_and_ends_sunday",
+    "exercise_media_position_1_to_2",
+    "sync_pairing_token_single_use_and_not_expired",
+    "sync_client_not_revoked_and_has_fit_upload_scope",
+    "one_active_activity_session_link",
+    "one_published_plan_version_per_owner",
+    "p5_has_no_composite_score",
+    "counts_and_physical_measurements_are_non_negative",
+    "free_database_and_storage_quota_guards_block_before_provider_limit"
+  ],
+  "ingestionTransactions": {
+    "csv": "validate_all_460_items_then_apply_one_transaction",
+    "fit": "validate_identity_and_hash_then_upsert_one_activity_and_all_detail_atomically",
+    "retry": "same_input_and_contract_is_safe",
+    "nullOverwriteAllowed": false,
+    "conflictOverwriteAllowed": false
+  },
+  "architectureQuestionsForAPP003": [
+    "boundary_between_dotnet_api_supabase_data_api_and_sql_functions",
+    "restricted_authentication_for_local_garmin_synchronizer",
+    "whether_service_role_is_required_for_ingestion",
+    "delivery_location_for_non_personal_exercise_images"
+  ],
+  "nextTask": "APP-003",
+  "nextTaskActivated": false
+}

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/backend/RunningPerformance.Api/RunningPerformance.Api.csproj" />
+    <Project Path="src/backend/RunningPerformance.Application/RunningPerformance.Application.csproj" />
+    <Project Path="src/backend/RunningPerformance.Domain/RunningPerformance.Domain.csproj" />
+    <Project Path="src/backend/RunningPerformance.Fit/RunningPerformance.Fit.csproj" />
+    <Project Path="src/backend/RunningPerformance.Infrastructure/RunningPerformance.Infrastructure.csproj" />
+    <Project Path="src/backend/RunningPerformance.Worker/RunningPerformance.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/backend-integration/RunningPerformance.IntegrationTests.csproj" />
+    <Project Path="tests/backend-unit/RunningPerformance.UnitTests.csproj" />
+  </Folder>
+</Solution>
