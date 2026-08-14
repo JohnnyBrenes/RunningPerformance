@@ -116,6 +116,13 @@ builder.Services.AddCors(options =>
                 CorrelationIdMiddleware.HeaderName)
             .WithExposedHeaders(CorrelationIdMiddleware.HeaderName));
 });
+var anonymousPermitLimit = builder.Configuration.GetValue("RateLimit:AnonymousPermitLimit", 30);
+var authenticatedPermitLimit = builder.Configuration.GetValue("RateLimit:AuthenticatedPermitLimit", 120);
+if (anonymousPermitLimit is < 1 or > 10_000 || authenticatedPermitLimit is < 1 or > 10_000)
+{
+    throw new InvalidOperationException("Rate limits must be between 1 and 10000 requests per minute.");
+}
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -130,7 +137,7 @@ builder.Services.AddRateLimiter(options =>
         var key = owner is not null
             ? $"owner:{owner}"
             : $"anonymous:{context.Connection.RemoteIpAddress}";
-        var limit = owner is null ? 30 : 120;
+        var limit = owner is null ? anonymousPermitLimit : authenticatedPermitLimit;
         return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
         {
             AutoReplenishment = true,

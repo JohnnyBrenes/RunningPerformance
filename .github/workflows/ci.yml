@@ -12,6 +12,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Supabase/PostgreSQL integration, Storage isolation and Playwright remain local
+# by project policy; see the verification commands in README.md.
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -62,63 +64,3 @@ jobs:
           ./scripts/Test-BackupCrypto.ps1
       - name: Build backend container
         run: docker build --tag running-performance-api:ci .
-
-  database:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22.15.1
-          cache: npm
-          cache-dependency-path: src/web/package-lock.json
-      - name: Use pinned npm
-        run: npm install --global npm@11.6.2
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 10.0.400
-          cache: true
-          cache-dependency-path: '**/packages.lock.json'
-      - run: npm ci --prefix src/web
-      - name: Build API for browser smoke
-        run: |
-          dotnet restore src/backend/RunningPerformance.Api/RunningPerformance.Api.csproj --locked-mode
-          dotnet build src/backend/RunningPerformance.Api/RunningPerformance.Api.csproj --configuration Release --no-restore
-      - name: Start and verify local Supabase
-        run: npm --prefix src/web run db:start
-      - name: Rebuild database from migrations and seed
-        run: npm --prefix src/web run db:reset
-      - name: Lint database
-        run: npm --prefix src/web run db:lint
-      - name: Test database contracts and RLS
-        run: npm --prefix src/web run db:test
-      - name: Test Auth and Storage owner isolation
-        shell: pwsh
-        run: ./scripts/Test-LocalStorageIsolation.ps1
-      - name: Install smoke browsers
-        working-directory: src/web
-        run: npx playwright install --with-deps chromium webkit
-      - name: Start API and SPA for browser smoke
-        shell: bash
-        run: |
-          eval "$(./src/web/node_modules/.bin/supabase --workdir . status -o env)"
-          export VITE_SUPABASE_URL="http://127.0.0.1:54321"
-          export VITE_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-$ANON_KEY}"
-          export VITE_API_BASE_URL="http://127.0.0.1:5080"
-          ASPNETCORE_URLS="http://127.0.0.1:5080" ASPNETCORE_ENVIRONMENT=Development nohup dotnet run --project src/backend/RunningPerformance.Api --configuration Release --no-build > /tmp/running-performance-api.log 2>&1 &
-          nohup npm --prefix src/web run dev -- --host 127.0.0.1 > /tmp/running-performance-web.log 2>&1 &
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:5080/health/ready >/dev/null && curl --fail --silent http://127.0.0.1:5173 >/dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat /tmp/running-performance-api.log
-          cat /tmp/running-performance-web.log
-          exit 1
-      - name: Smoke access, profile and races in Chromium and WebKit
-        run: npm --prefix src/web run test:e2e
-      - name: Stop local Supabase
-        if: always()
-        run: npm --prefix src/web run db:stop

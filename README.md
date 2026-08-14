@@ -72,6 +72,8 @@ npm --prefix src/web run build
 docker build --tag running-performance-api:local .
 ```
 
+Por política del proyecto, las pruebas PostgreSQL/Supabase, el aislamiento de Storage y Playwright permanecen locales: GitHub Actions no sustituye una base de integración alojada. Deben ejecutarse en esta pila sintética antes de cada despliegue. El CI remoto se limita a build, formato, pruebas sin infraestructura externa, frontend, auditorías, contratos y contenedor.
+
 Supabase expone API en `http://127.0.0.1:54321`, PostgreSQL en `127.0.0.1:54322` y Studio en `http://127.0.0.1:54323`. Docker Desktop muestra cinco componentes funcionales (`db`, `auth`, `storage`, `rest`, `kong`) y dos herramientas locales (`studio`, `pg_meta`). Edge Runtime, Realtime, Analytics, correo, Image Proxy y Pooler están desactivados para este incremento.
 
 DBeaver puede conectarse directamente a la base local con host `127.0.0.1`, puerto `54322`, base `postgres`, usuario `postgres`, contraseña `postgres` y SSL desactivado. Los datos de dominio están en el esquema `app`; `auth` y `storage` pertenecen a Supabase. Esa sesión administrativa evita RLS, por lo que sirve para diagnóstico, no para demostrar aislamiento entre propietarios.
