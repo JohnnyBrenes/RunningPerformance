@@ -1,4 +1,9 @@
-import { ApiError, OpenAPI } from '../api/generated'
+import {
+  ApiError,
+  OpenAPI,
+  PlansService,
+  type TrainingPlanDetailResponse,
+} from '../api/generated'
 import { supabase } from './supabase'
 
 OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:5080'
@@ -11,6 +16,15 @@ OpenAPI.TOKEN = async () => {
   return data.session.access_token
 }
 OpenAPI.HEADERS = async () => ({ 'X-Correlation-ID': crypto.randomUUID() })
+
+export async function getCurrentTrainingPlanOrNull(): Promise<TrainingPlanDetailResponse | null> {
+  try {
+    return await PlansService.getCurrentTrainingPlan()
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
 
 export function readableApiError(error: unknown): string {
   if (error instanceof ApiError && (error.status === 429 || error.status >= 500)) {

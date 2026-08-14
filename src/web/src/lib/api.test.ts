@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { ApiError } from '../api/generated'
-import { apiRetryDelay, readableApiError, shouldRetryApiQuery } from './api'
+import { describe, expect, it, vi } from 'vitest'
+import { ApiError, PlansService } from '../api/generated'
+import { apiRetryDelay, getCurrentTrainingPlanOrNull, readableApiError, shouldRetryApiQuery } from './api'
 
 function apiError(status: number) {
   return Object.assign(Object.create(ApiError.prototype), { status }) as ApiError
@@ -24,5 +24,14 @@ describe('API cold-start retry policy', () => {
   it('explains throttling and a sleeping free backend without exposing provider details', () => {
     expect(readableApiError(apiError(429))).toContain('demasiadas solicitudes')
     expect(readableApiError(apiError(503))).toContain('despertando')
+  })
+
+  it('treats a missing current plan as an empty state and preserves other failures', async () => {
+    const request = vi.spyOn(PlansService, 'getCurrentTrainingPlan')
+    request.mockRejectedValueOnce(apiError(404))
+    await expect(getCurrentTrainingPlanOrNull()).resolves.toBeNull()
+
+    request.mockRejectedValueOnce(apiError(500))
+    await expect(getCurrentTrainingPlanOrNull()).rejects.toMatchObject({ status: 500 })
   })
 })

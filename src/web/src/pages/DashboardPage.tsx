@@ -13,12 +13,11 @@ import {
 } from 'recharts'
 import {
   DashboardService,
-  PlansService,
   ProfileService,
   RacesService,
 } from '../api/generated'
 import { ErrorState, LoadingState } from '../components/States'
-import { readableApiError } from '../lib/api'
+import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import {
   buildTrendChartRows,
   formatNullable,
@@ -58,7 +57,7 @@ export function DashboardPage() {
 
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => ProfileService.getProfile() })
   const races = useQuery({ queryKey: ['races'], queryFn: () => RacesService.getRaces() })
-  const plan = useQuery({ queryKey: ['plan-current'], queryFn: () => PlansService.getCurrentTrainingPlan() })
+  const plan = useQuery({ queryKey: ['plan-current'], queryFn: getCurrentTrainingPlanOrNull })
   const dashboard = useQuery({
     queryKey: ['dashboard', windowWeeks],
     queryFn: () => DashboardService.getDashboard({ weeks: windowWeeks }),
@@ -77,7 +76,7 @@ export function DashboardPage() {
       profile.refetch(), races.refetch(), plan.refetch(), dashboard.refetch(),
     ])} />
   }
-  if (!profile.data || !races.data || !plan.data || !dashboard.data) {
+  if (!profile.data || !races.data || !dashboard.data) {
     return <ErrorState message="El dashboard respondió sin el contrato esperado." />
   }
 
@@ -86,7 +85,7 @@ export function DashboardPage() {
     .sort((left, right) => left.raceDate.localeCompare(right.raceDate))[0]
   const current = dashboard.data
   const today = localDateKey()
-  const todaySessions = plan.data.sessions.filter((session) => session.scheduledDate === today)
+  const todaySessions = plan.data?.sessions.filter((session) => session.scheduledDate === today) ?? []
 
   return (
     <div className="page dashboard-page">
@@ -120,7 +119,7 @@ export function DashboardPage() {
                       <span><small>Distancia</small><strong>{session.distanceM == null ? 'ND' : `${(Number(session.distanceM) / 1000).toFixed(1)} km`}</strong></span>
                       <span><small>RPE</small><strong>{formatNullable(session.targetRpeMin)}–{formatNullable(session.targetRpeMax)}</strong></span>
                     </div>
-                    <Link className="button secondary" to={`/plan?version=${plan.data.version.id}&session=${session.id}`}>Ver actividad de hoy</Link>
+                    <Link className="button secondary" to={`/plan?version=${plan.data!.version.id}&session=${session.id}`}>Ver actividad de hoy</Link>
                   </div>
                 </div>
               })}

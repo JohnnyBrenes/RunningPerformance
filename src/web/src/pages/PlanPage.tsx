@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { PlansService, ProfileService, type PlannedExerciseResponse, type PlannedSessionResponse, type TrainingPlanDetailResponse } from '../api/generated'
 import { EmptyState, ErrorState, LoadingState } from '../components/States'
 import { SessionCompletionPanel } from '../components/SessionCompletionPanel'
-import { readableApiError } from '../lib/api'
+import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import { selectExerciseMedia } from '../lib/exerciseMedia'
 
 export function PlanPage() {
@@ -17,7 +17,7 @@ export function PlanPage() {
   const [editObjective, setEditObjective] = useState('')
 
   const summaries = useQuery({ queryKey: ['plans'], queryFn: () => PlansService.getTrainingPlans() })
-  const current = useQuery({ queryKey: ['plan-current'], queryFn: () => PlansService.getCurrentTrainingPlan() })
+  const current = useQuery({ queryKey: ['plan-current'], queryFn: getCurrentTrainingPlanOrNull })
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => ProfileService.getProfile() })
   const planSummary = summaries.data?.[0]
   const selectedVersion = planSummary?.versions.find((version) => version.id === versionId)
@@ -90,9 +90,9 @@ export function PlanPage() {
   if (summaries.isError || current.isError || profile.isError) {
     return <ErrorState message={readableApiError(summaries.error ?? current.error ?? profile.error)} retry={() => void Promise.all([summaries.refetch(), current.refetch(), profile.refetch()])} />
   }
-  if (historical.isPending && selectedVersion?.id !== current.data.version.id) return <LoadingState label="Cargando versión" />
+  if (historical.isPending && selectedVersion?.id !== current.data?.version.id) return <LoadingState label="Cargando versión" />
   if (historical.isError) return <ErrorState message={readableApiError(historical.error)} retry={() => void historical.refetch()} />
-  if (!planSummary || !detail) return <EmptyState title="Todavía no hay un plan">La primera versión publicada aparecerá aquí.</EmptyState>
+  if (!planSummary || !detail || !current.data) return <EmptyState title="Todavía no hay un plan">La primera versión publicada aparecerá aquí.</EmptyState>
 
   const selectedSession = detail.sessions.find((session) => session.id === sessionId) ?? detail.sessions[0]
   const draft = planSummary.versions.find((version) => version.status === 'draft')
