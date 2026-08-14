@@ -58,7 +58,7 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/Test-SchemaContract.ps1
-          ./scripts/Test-PublishBoundary.ps1
+          ./scripts/Test-PublishBoundary.ps1 -GitIndex
           ./scripts/Test-FreeDeployment.ps1
           ./scripts/Test-ProductionHardening.ps1
           ./scripts/Test-BackupCrypto.ps1

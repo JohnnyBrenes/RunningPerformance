@@ -19,8 +19,8 @@ if ($GitIndex) {
 }
 else {
     $files = Get-ChildItem $appRoot -Recurse -File | Where-Object {
-        $relative = $_.FullName.Substring($appRoot.Length).TrimStart('\')
-        -not ($ignoredDirectories | Where-Object { $relative -match "(^|\\)$([regex]::Escape($_))(\\|$)" })
+        $relative = [IO.Path]::GetRelativePath($appRoot, $_.FullName)
+        -not ($ignoredDirectories | Where-Object { $relative -match "(^|[\\/])$([regex]::Escape($_))([\\/]|$)" })
     }
 }
 
