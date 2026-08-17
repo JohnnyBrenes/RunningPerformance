@@ -62,7 +62,7 @@ test('renders profile, races, exercise media and the published plan without hori
 
   await page.goto('/evaluations')
   await expect(page.getByLabel('Semana que inicia')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Evaluar semana' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Ver resumen|Crear resumen/ })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
   await page.goto('/profile')
@@ -104,14 +104,18 @@ test('renders profile, races, exercise media and the published plan without hori
   await expectNoHorizontalOverflow(page)
 
   await page.goto('/evaluations')
-  await expect(page.getByRole('heading', { name: 'Evaluación P1–P5' })).toBeVisible()
-  await expect(page.locator('.traffic-card')).toContainText('Amarillo')
+  await expect(page.getByRole('heading', { name: 'Cierre de semana' })).toBeVisible()
+  await expect(page.locator('.traffic-card')).toContainText('Revisar antes de continuar')
+  await expect(page.getByRole('heading', { name: 'Resumen de la semana' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Entrenamientos', exact: true })).toBeVisible()
+  await expect(page.getByText(/^Evidencia(?: \(|$)/)).toHaveCount(0)
+  await page.getByText('Ver desglose técnico P1–P5', { exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Cumplimiento por tipo' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Volumen de running' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Tirada larga exterior' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Carga interna sRPE' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Seguridad y recuperación' })).toBeVisible()
-  await expect(page.locator('.weekly-metric-grid article.missing').first()).toContainText('ND')
+  await expect(page.locator('.weekly-metric-grid article.missing').first()).toContainText('Sin dato')
   await expectNoHorizontalOverflow(page)
 
   if ((page.viewportSize()?.width ?? 1000) < 896) {
@@ -198,22 +202,17 @@ test('requires a human decision and creates a new plan draft for an adjustment',
   await expect(page).toHaveURL('/')
   await page.goto('/evaluations')
 
-  const decisionInput = page.getByRole('combobox', { name: 'Decisión' })
+  const decisionInput = page.getByRole('combobox', { name: 'Qué hacer' })
   if (await decisionInput.count()) {
     await decisionInput.selectOption('adapt')
-    await page.getByLabel('Observación').fill('La semana sintética conserva resultados y respuesta posterior pendientes.')
-    await page.getByLabel('Evidencia', { exact: true }).fill('P1 y P5 muestran los faltantes como ND con enlaces a sus sesiones fuente.')
-    await page.getByLabel('Comparación histórica').fill('No existe todavía una semana sintética comparable; no se infiere una tendencia.')
-    await page.getByLabel('Interpretación').fill('La incertidumbre justifica adaptar una sesión sin añadir carga.')
-    await page.getByLabel('Recomendación').fill('Mantener la carga total y revisar la respuesta de 24 a 48 horas.')
+    await page.getByLabel('Notas de la semana').fill('La semana sintética conserva resultados y respuesta posterior pendientes.')
     await page.getByLabel('Nuevo objetivo').fill('Objetivo sintético adaptado; conservar carga y priorizar respuesta posterior.')
-    await page.getByLabel('Motivo exacto').fill('Decisión humana APP-011 sobre evidencia sintética.')
-    await page.getByLabel('Criterio de revisión').fill('Revisar cuando exista respuesta posterior completa sin señal adversa.')
-    await page.getByRole('button', { name: 'Confirmar decisión' }).click()
+    await page.getByLabel('Motivo del cambio').fill('Decisión humana APP-011 sobre los registros sintéticos.')
+    await page.getByRole('button', { name: 'Guardar decisión' }).click()
   }
 
-  await expect(page.getByRole('heading', { name: 'Adaptar', exact: true })).toBeVisible()
-  await expect(page.getByText('Auditable', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Adaptar una sesión', exact: true })).toBeVisible()
+  await expect(page.getByText(/Decisión guardada/)).toBeVisible()
   await expect(page.getByText('Nueva versión sin publicar', { exact: true })).toBeVisible()
   await page.getByRole('link', { name: 'Revisar borrador' }).click()
   await expect(page).toHaveURL(/\/plan\?version=/)

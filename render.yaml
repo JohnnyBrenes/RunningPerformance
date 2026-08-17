@@ -7,7 +7,7 @@ services:
     dockerContext: .
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health/ready
-    autoDeployTrigger: off
+    autoDeployTrigger: commit
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production

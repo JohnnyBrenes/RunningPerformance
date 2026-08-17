@@ -6,7 +6,7 @@ const navigation = [
   { to: '/calendar', label: 'Calendario', glyph: '▦', end: false },
   { to: '/plan', label: 'Plan', glyph: '≋', end: false },
   { to: '/activities', label: 'Actividades', glyph: '↗', end: false },
-  { to: '/evaluations', label: 'Evaluar', glyph: '◉', end: false },
+  { to: '/evaluations', label: 'Cierre', glyph: '◉', end: false },
   { to: '/exercises', label: 'Ejercicios', glyph: '◇', end: false },
   { to: '/races', label: 'Carreras', glyph: '△', end: false },
   { to: '/profile', label: 'Perfil', glyph: '◯', end: false },
