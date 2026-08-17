@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { WeeklyEvaluationSummaryResponse } from '../api/generated'
-import { formatMetricValue, previousMonday, selectWeeklyEvaluations } from './EvaluationsPage'
+import { formatMetricValue, previousMonday, selectWeeklyEvaluations, sessionDateLabels } from './EvaluationsPage'
 
 describe('weekly metric presentation', () => {
   it('defaults a new evaluation to the most recently completed week', () => {
@@ -21,6 +21,13 @@ describe('weekly metric presentation', () => {
     ])
 
     expect(selected.map((evaluation) => evaluation.id)).toEqual(['final', 'another-week'])
+  })
+
+  it('distinguishes the actual Garmin date from the planned session date', () => {
+    const dates = sessionDateLabels('2026-08-15', '2026-08-16T06:40:23')
+
+    expect(dates.primary).toContain('Realizada: dom, 16 ago')
+    expect(dates.planned).toContain('Planificada: sáb, 15 ago')
   })
 
   it('renders a stored missing value as ND without converting it to zero', () => {

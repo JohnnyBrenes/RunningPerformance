@@ -12,5 +12,6 @@ export type WeeklyEvaluationSessionResponse = {
     sessionType: string | null;
     modality: string | null;
     objective: string | null;
+    actualStartedAtLocal: string | null;
 };
 

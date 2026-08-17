@@ -5812,7 +5812,8 @@
           "scheduledDate",
           "sessionType",
           "modality",
-          "objective"
+          "objective",
+          "actualStartedAtLocal"
         ],
         "type": "object",
         "properties": {
@@ -5867,6 +5868,13 @@
               "null",
               "string"
             ]
+          },
+          "actualStartedAtLocal": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

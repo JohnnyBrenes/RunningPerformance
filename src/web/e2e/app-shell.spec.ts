@@ -108,6 +108,7 @@ test('renders profile, races, exercise media and the published plan without hori
   await expect(page.locator('.traffic-card')).toContainText('Revisar antes de continuar')
   await expect(page.getByRole('heading', { name: 'Resumen de la semana' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Entrenamientos', exact: true })).toBeVisible()
+  await expect(page.locator('.source-list')).toContainText('Planificada:')
   await expect(page.getByText(/^Evidencia(?: \(|$)/)).toHaveCount(0)
   await page.getByText('Ver desglose técnico P1–P5', { exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Cumplimiento por tipo' })).toBeVisible()

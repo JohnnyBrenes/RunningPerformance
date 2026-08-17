@@ -474,11 +474,30 @@ public static class WeeklyEvaluationEndpoints
                 select source.id, source.planned_session_id, source.activity_id,
                   source.classification, source.execution_status,
                   session.scheduled_date, session.session_type, session.modality,
-                  session.objective
+                  session.objective,
+                  coalesce(source_activity.started_at_local,
+                    linked_execution.actual_started_at_local)
                 from app.weekly_evaluation_sessions source
+                join app.weekly_evaluations evaluation
+                  on evaluation.owner_id = source.owner_id
+                 and evaluation.id = source.weekly_evaluation_id
                 left join app.planned_sessions session
                   on session.owner_id = source.owner_id
                  and session.id = source.planned_session_id
+                left join app.activities source_activity
+                  on source_activity.owner_id = source.owner_id
+                 and source_activity.id = source.activity_id
+                left join lateral (
+                  select min(activity.started_at_local) as actual_started_at_local
+                  from app.activity_session_links link
+                  join app.activities activity
+                    on activity.owner_id = link.owner_id
+                   and activity.id = link.activity_id
+                  where link.owner_id = source.owner_id
+                    and link.planned_session_id = source.planned_session_id
+                    and link.status = 'confirmed'
+                    and link.created_at <= evaluation.cutoff_at
+                ) linked_execution on true
                 where source.weekly_evaluation_id = @evaluation_id
                 order by session.scheduled_date, source.created_at, source.id;
                 """;
@@ -495,7 +514,8 @@ public static class WeeklyEvaluationEndpoints
                     Nullable<DateOnly>(reader, 5),
                     NullableString(reader, 6),
                     NullableString(reader, 7),
-                    NullableString(reader, 8)));
+                    NullableString(reader, 8),
+                    Nullable<DateTime>(reader, 9)));
             }
         }
 
@@ -861,7 +881,8 @@ public sealed record WeeklyEvaluationSessionResponse(
     DateOnly? ScheduledDate,
     string? SessionType,
     string? Modality,
-    string? Objective);
+    string? Objective,
+    DateTime? ActualStartedAtLocal);
 
 public sealed record WeeklyMetricEvidenceResponse(
     string SourceType,

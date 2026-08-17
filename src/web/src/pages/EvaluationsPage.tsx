@@ -74,7 +74,10 @@ function EvaluationDetail({ detail, onChanged }: { detail: WeeklyEvaluationDetai
       <SummaryCard label="Recuperación" value={recoverySummary(pain, fatigue, perceivedRecovery)} detail="Dolor, fatiga y recuperación percibida" />
     </div></section>
     <section className="evaluation-sources section-block" aria-labelledby="sessions-title"><div className="section-heading"><div><span className="section-label">Una vez por entrenamiento</span><h2 id="sessions-title">Entrenamientos</h2></div><span className="date-chip">{detail.sessions.length} registrados</span></div>
-      {detail.sessions.length === 0 ? <p className="muted-copy">No hay entrenamientos registrados para esta semana.</p> : <div className="source-list">{detail.sessions.map((session) => <article key={session.id}><div><strong>{session.scheduledDate ? fullDate(session.scheduledDate) : 'Actividad sin sesión planificada'}</strong><span>{sessionTypeLabel(session.sessionType)}</span></div><span className={`source-status ${session.executionStatus ? '' : 'missing'}`}>{executionLabel(session.executionStatus)}</span>{session.plannedSessionId && detail.evaluation.planVersionId && <Link to={`/plan?version=${detail.evaluation.planVersionId}&session=${session.plannedSessionId}#completion`}>Abrir entrenamiento</Link>}{!session.plannedSessionId && session.activityId && <Link to={`/activities/${session.activityId}`}>Abrir actividad</Link>}</article>)}</div>}
+      {detail.sessions.length === 0 ? <p className="muted-copy">No hay entrenamientos registrados para esta semana.</p> : <div className="source-list">{detail.sessions.map((session) => {
+        const dates = sessionDateLabels(session.scheduledDate, session.actualStartedAtLocal)
+        return <article key={session.id}><div><strong>{dates.primary}</strong>{dates.planned && <span>{dates.planned}</span>}<span>{sessionTypeLabel(session.sessionType)}</span></div><span className={`source-status ${session.executionStatus ? '' : 'missing'}`}>{executionLabel(session.executionStatus)}</span>{session.plannedSessionId && detail.evaluation.planVersionId && <Link to={`/plan?version=${detail.evaluation.planVersionId}&session=${session.plannedSessionId}#completion`}>Abrir entrenamiento</Link>}{!session.plannedSessionId && session.activityId && <Link to={`/activities/${session.activityId}`}>Abrir actividad</Link>}</article>
+      })}</div>}
     </section>
     <details className="technical-evaluation section-block"><summary>Ver desglose técnico P1–P5</summary><p>Estos son los cálculos internos del resumen. Los entrenamientos que los originan aparecen una sola vez en la lista anterior.</p><div className="metric-sections">{Object.entries(grouped).map(([code, metrics]) => <MetricSection code={code} metrics={metrics} key={code} />)}</div></details>
     {detail.decision ? <DecisionRecord detail={detail} /> : <DecisionForm detail={detail} onChanged={onChanged} />}
@@ -147,6 +150,17 @@ export function previousMonday(reference = new Date()) {
   return localDate(date)
 }
 
+export function sessionDateLabels(scheduledDate: string | null, actualStartedAtLocal: string | null) {
+  if (actualStartedAtLocal) return {
+    primary: `Realizada: ${fullActualDate(actualStartedAtLocal)}`,
+    planned: scheduledDate ? `Planificada: ${fullDate(scheduledDate)}` : null,
+  }
+  return {
+    primary: scheduledDate ? `Planificada: ${fullDate(scheduledDate)}` : 'Actividad sin sesión planificada',
+    planned: null,
+  }
+}
+
 function findMetric(metrics: WeeklyMetricValueResponse[], code: string, dimension: string) { return metrics.find((metric) => metric.metricCode === code && metric.dimension === dimension) }
 function primaryMetricValue(metric?: WeeklyMetricValueResponse) { return !metric || formatMetricValue(metric) === 'ND' ? 'Sin registrar' : formatMetricValue(metric) }
 function technicalMetricValue(metric: WeeklyMetricValueResponse) { const value = formatMetricValue(metric); return value === 'ND' ? 'Sin dato' : value }
@@ -167,6 +181,7 @@ function localDate(date: Date) { return `${date.getFullYear()}-${String(date.get
 function parseDate(value: string) { return new Date(`${value}T00:00:00`) }
 function formatPeriod(start: string, end: string) { return `${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(start))} – ${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(end))}` }
 function fullDate(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', month: 'short' }).format(parseDate(value)) }
+function fullActualDate(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(value)) }
 function formatDateTime(value: string) { return new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
 function round(value: number) { return Number(value.toFixed(2)).toLocaleString('es') }
 function trafficTitle(value: string) { return ({ green: 'Semana en orden', yellow: 'Revisar antes de continuar', red: 'Pausa y revisión' } as Record<string, string>)[value] ?? value }
