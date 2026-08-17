@@ -20,10 +20,15 @@ import { ErrorState, LoadingState } from '../components/States'
 import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import {
   buildDailyDistanceChartRows,
-  formatNullable,
   formatPace,
 } from '../lib/dashboard'
 import { localDateKey, sessionKind } from '../lib/calendar'
+import {
+  buildRemainingWeekAgenda,
+  sessionAgendaDetail,
+  sessionAgendaTitle,
+  type RemainingWeekDay,
+} from '../lib/weekAgenda'
 
 const windowOptions = [4, 8, 12] as const
 
@@ -85,7 +90,7 @@ export function DashboardPage() {
     .sort((left, right) => left.raceDate.localeCompare(right.raceDate))[0]
   const current = dashboard.data
   const today = localDateKey()
-  const todaySessions = plan.data?.sessions.filter((session) => session.scheduledDate === today) ?? []
+  const weekAgenda = buildRemainingWeekAgenda(today, plan.data?.sessions ?? [])
 
   return (
     <div className="page dashboard-page">
@@ -101,36 +106,16 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <section className="dashboard-essentials-grid" aria-label="Resumen de hoy y próxima carrera">
-        <article className="feature-card today-card">
-          <div className="card-top"><span className="section-label">Hoy</span><Link to="/calendar">Ver calendario →</Link></div>
-          {todaySessions.length > 0 ? (
-            <div className="today-session-list">
-              {todaySessions.map((session) => {
-                const kind = sessionKind(session)
-                return <div className={`today-session ${kind.className}`} key={session.id}>
-                  <span className="today-session-icon" aria-hidden="true">{kind.icon}</span>
-                  <div className="today-session-copy">
-                    <p>{kind.label}</p>
-                    <h2>{session.sessionType === 'easy_run' ? 'Trote suave' : session.sessionType === 'long_run' ? 'Carrera larga' : session.sessionType === 'quality' ? 'Trabajo de calidad' : kind.label}</h2>
-                    <span>{session.objective}</span>
-                    <div className="today-session-metrics">
-                      <span><small>Duración</small><strong>{session.durationSeconds == null ? 'ND' : `${Math.round(Number(session.durationSeconds) / 60)} min`}</strong></span>
-                      <span><small>Distancia</small><strong>{session.distanceM == null ? 'ND' : `${(Number(session.distanceM) / 1000).toFixed(1)} km`}</strong></span>
-                      <span><small>RPE</small><strong>{formatNullable(session.targetRpeMin)}–{formatNullable(session.targetRpeMax)}</strong></span>
-                    </div>
-                    <p className="rpe-help">RPE: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo).</p>
-                    <Link className="button secondary" to={`/plan?version=${plan.data!.version.id}&session=${session.id}`}>Ver actividad de hoy</Link>
-                  </div>
-                </div>
-              })}
-            </div>
-          ) : (
-            <div className="today-rest">
-              <span aria-hidden="true">○</span>
-              <div><h2>Descanso</h2><p>Hoy no hay una sesión programada. La recuperación también forma parte del plan.</p></div>
-            </div>
-          )}
+      <section className="dashboard-essentials-grid" aria-label="Resumen semanal y próxima carrera">
+        <article className="feature-card week-agenda-card">
+          <div className="card-top"><span className="section-label">Plan vigente</span><Link to="/plan">Abrir plan →</Link></div>
+          <div className="week-agenda-heading"><h2>Lo pendiente de esta semana</h2><p>Una vista simple desde hoy hasta el domingo. Los días anteriores desaparecen automáticamente.</p></div>
+          <div className="week-agenda-groups">
+            <WeekAgendaGroup label="Hoy" days={weekAgenda.slice(0, 1)} planVersionId={plan.data?.version.id} />
+            <WeekAgendaGroup label="Mañana" days={weekAgenda.slice(1, 2)} planVersionId={plan.data?.version.id} emptyMessage="La semana termina hoy." />
+            <WeekAgendaGroup label="Pendiente esta semana" days={weekAgenda.slice(2)} planVersionId={plan.data?.version.id} emptyMessage="No quedan más días después de mañana." />
+          </div>
+          <p className="rpe-help">RPE: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo). El objetivo completo aparece al abrir cada entrenamiento.</p>
         </article>
 
         <article className="quiet-card next-race-card">
@@ -207,4 +192,34 @@ export function DashboardPage() {
 
     </div>
   )
+}
+
+function WeekAgendaGroup({
+  label,
+  days,
+  planVersionId,
+  emptyMessage = 'No hay días disponibles.',
+}: {
+  label: string
+  days: RemainingWeekDay[]
+  planVersionId: string | undefined
+  emptyMessage?: string
+}) {
+  return <section className="week-agenda-group" aria-label={label}>
+    <h3>{label}</h3>
+    {days.length === 0 ? <p className="week-agenda-empty">{emptyMessage}</p> : days.map((day) => (
+      <article className="week-agenda-day" key={day.date}>
+        <time dateTime={day.date}><strong>{day.weekday}</strong><span>{day.shortDate}</span></time>
+        <div className="week-agenda-items">
+          {day.sessions.length === 0 ? <div className="week-agenda-rest"><span aria-hidden="true">○</span><div><strong>Descanso</strong><small>Sin entrenamiento programado</small></div></div> : day.sessions.map((session) => {
+            const kind = sessionKind(session)
+            const content = <><span className="week-agenda-icon" aria-hidden="true">{kind.icon}</span><span className="week-agenda-copy"><strong>{sessionAgendaTitle(session)}</strong><small>{sessionAgendaDetail(session)}{session.obligation === 'optional' ? ' · Opcional' : ''}</small></span><span className="week-agenda-arrow" aria-hidden="true">→</span></>
+            return planVersionId
+              ? <Link className={`week-agenda-session ${kind.className}`} to={`/plan?version=${planVersionId}&session=${session.id}`} key={session.id}>{content}</Link>
+              : <div className={`week-agenda-session ${kind.className}`} key={session.id}>{content}</div>
+          })}
+        </div>
+      </article>
+    ))}
+  </section>
 }
