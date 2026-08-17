@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTrendChartRows, formatNullable, formatPace, quotaPercent, weightedRecentPace } from './dashboard'
+import { buildDailyDistanceChartRows, buildTrendChartRows, formatNullable, formatPace, quotaPercent, weightedRecentPace } from './dashboard'
 
 describe('dashboard presentation rules', () => {
   it('keeps missing data distinct from explicit zero and false', () => {
@@ -30,6 +30,21 @@ describe('dashboard presentation rules', () => {
       ],
     }])
     expect(rows[0]).toMatchObject({ week: '10 ago', treadmillKm: 5, outdoorKm: 3, otherKm: null })
+  })
+
+  it('plots each activity on its actual date and keeps rest days at zero', () => {
+    const rows = buildDailyDistanceChartRows([
+      { date: '2026-08-15', modalities: [], sources: [] },
+      {
+        date: '2026-08-16', sources: [], modalities: [
+          { modality: 'outdoor', activityCount: 1, distanceM: 14115.6, durationSeconds: 5564.225, paceSecondsPerKm: 394.19 },
+        ],
+      },
+    ])
+    expect(rows).toEqual([
+      { date: '15 ago', treadmillKm: 0, outdoorKm: 0, otherKm: 0 },
+      { date: '16 ago', treadmillKm: 0, outdoorKm: 14.12, otherKm: 0 },
+    ])
   })
 
   it('calculates recent pace from total time and distance', () => {

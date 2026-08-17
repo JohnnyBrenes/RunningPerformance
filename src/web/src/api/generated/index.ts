@@ -23,6 +23,7 @@ export type { CreateWeeklyEvaluationSnapshotRequest } from './models/CreateWeekl
 export type { CsvImportAcceptedResponse } from './models/CsvImportAcceptedResponse';
 export type { DashboardAlertResponse } from './models/DashboardAlertResponse';
 export type { DashboardCurrentWeekResponse } from './models/DashboardCurrentWeekResponse';
+export type { DashboardDailyDistanceResponse } from './models/DashboardDailyDistanceResponse';
 export type { DashboardModalityTrendResponse } from './models/DashboardModalityTrendResponse';
 export type { DashboardNextSessionResponse } from './models/DashboardNextSessionResponse';
 export type { DashboardPillarResponse } from './models/DashboardPillarResponse';

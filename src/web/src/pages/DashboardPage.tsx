@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -19,7 +19,7 @@ import {
 import { ErrorState, LoadingState } from '../components/States'
 import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import {
-  buildTrendChartRows,
+  buildDailyDistanceChartRows,
   formatNullable,
   formatPace,
 } from '../lib/dashboard'
@@ -63,8 +63,8 @@ export function DashboardPage() {
     queryFn: () => DashboardService.getDashboard({ weeks: windowWeeks }),
   })
   const chartRows = useMemo(
-    () => buildTrendChartRows(dashboard.data?.trends ?? []),
-    [dashboard.data?.trends],
+    () => buildDailyDistanceChartRows(dashboard.data?.dailyDistances ?? []),
+    [dashboard.data?.dailyDistances],
   )
 
   if (profile.isPending || races.isPending || plan.isPending || dashboard.isPending) {
@@ -119,6 +119,7 @@ export function DashboardPage() {
                       <span><small>Distancia</small><strong>{session.distanceM == null ? 'ND' : `${(Number(session.distanceM) / 1000).toFixed(1)} km`}</strong></span>
                       <span><small>RPE</small><strong>{formatNullable(session.targetRpeMin)}–{formatNullable(session.targetRpeMax)}</strong></span>
                     </div>
+                    <p className="rpe-help">RPE: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo).</p>
                     <Link className="button secondary" to={`/plan?version=${plan.data!.version.id}&session=${session.id}`}>Ver actividad de hoy</Link>
                   </div>
                 </div>
@@ -149,23 +150,23 @@ export function DashboardPage() {
 
       <section className="dashboard-section" aria-labelledby="trend-heading">
         <div className="section-heading-row">
-          <div><p className="eyebrow">Historial reciente</p><h2 id="trend-heading">Distancia por semana</h2><p>Caminadora y exterior se muestran por separado para comparar mejor.</p></div>
+          <div><p className="eyebrow">Historial reciente</p><h2 id="trend-heading">Distancia por día</h2><p>Cada entrenamiento aparece en su fecha real; caminadora y exterior permanecen separadas.</p></div>
           <div className="window-switch" aria-label="Ventana de tendencias">
             {windowOptions.map((option) => <button key={option} type="button" className={windowWeeks === option ? 'active' : ''} onClick={() => setWindowWeeks(option)}>{option} sem</button>)}
           </div>
         </div>
 
         <article className="feature-card trend-card">
-          <p className="chart-guide"><strong>X:</strong> semana de inicio · <strong>Y:</strong> kilómetros acumulados en esa semana.</p>
-          <div className="chart-frame" role="img" aria-label="Distancia semanal separada entre caminadora, exterior y otras modalidades">
+          <p className="chart-guide"><strong>X:</strong> fecha · <strong>Y:</strong> kilómetros realizados ese día.</p>
+          <div className="chart-frame" role="img" aria-label="Distancia diaria separada entre caminadora, exterior y otras modalidades">
             <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={chartRows} margin={{ top: 12, right: 12, left: 12, bottom: 24 }}>
+              <BarChart data={chartRows} margin={{ top: 12, right: 12, left: 12, bottom: 24 }}>
                 <CartesianGrid stroke="#49675f" strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="week"
+                  dataKey="date"
                   tick={{ fill: '#c5d6d0', fontSize: 12 }}
                   axisLine={{ stroke: '#769089' }}
-                  label={{ value: 'Semana', position: 'insideBottomRight', offset: -14, fill: '#e7f0ed' }}
+                  label={{ value: 'Fecha', position: 'insideBottomRight', offset: -14, fill: '#e7f0ed' }}
                 />
                 <YAxis
                   unit=" km"
@@ -176,28 +177,27 @@ export function DashboardPage() {
                 />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="treadmillKm" name="Caminadora" stroke="#d2693c" connectNulls={false} />
-                <Line type="monotone" dataKey="outdoorKm" name="Exterior" stroke="#f2c14e" strokeWidth={3} connectNulls={false} />
-                <Line type="monotone" dataKey="otherKm" name="Otra/ND" stroke="#7b7f76" connectNulls={false} />
-              </LineChart>
+                <Bar dataKey="treadmillKm" name="Caminadora" fill="#d2693c" />
+                <Bar dataKey="outdoorKm" name="Exterior" fill="#f2c14e" />
+                <Bar dataKey="otherKm" name="Otra/ND" fill="#7b7f76" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
           <div className="trend-actions"><Link to="/activities">Ver actividades históricas →</Link></div>
           <details className="trend-table-details">
-            <summary>Ver datos exactos y actividades fuente</summary>
+            <summary>Ver distancias diarias y actividades</summary>
             <div className="table-scroll"><table className="accessible-table">
-              <caption>Alternativa tabular de tendencias; ND conserva datos faltantes.</caption>
-              <thead><tr><th>Semana</th><th>Caminadora</th><th>Exterior</th><th>Otra/ND</th><th>Carga</th><th>Actividades</th></tr></thead>
-              <tbody>{current.trends.map((trend) => {
-                const modality = (name: string) => trend.modalities.find((item) => item.modality === name)
-                return <tr key={trend.weekStart}>
-                  <th>{dateLabel(trend.weekStart)}</th>
-                  <td>{modality('treadmill')?.distanceM == null ? 'ND' : `${(Number(modality('treadmill')?.distanceM) / 1000).toFixed(2)} km · ${formatPace(modality('treadmill')?.paceSecondsPerKm)}`}</td>
-                  <td>{modality('outdoor')?.distanceM == null ? 'ND' : `${(Number(modality('outdoor')?.distanceM) / 1000).toFixed(2)} km · ${formatPace(modality('outdoor')?.paceSecondsPerKm)}`}</td>
-                  <td>{modality('other')?.distanceM == null ? 'ND' : `${(Number(modality('other')?.distanceM) / 1000).toFixed(2)} km`}</td>
-                  <td>{trend.srpeTotal == null ? 'ND' : `${trend.srpeTotal} min × esfuerzo`}</td>
-                  <td>{trend.sources.length ? trend.sources.map((source) => <Link key={source.activityId} to={source.href}>{source.label}</Link>) : 'ND'}</td>
+              <caption>Distancias por fecha; los días sin carrera conservan cero.</caption>
+              <thead><tr><th>Fecha</th><th>Caminadora</th><th>Exterior</th><th>Otra/ND</th><th>Actividades</th></tr></thead>
+              <tbody>{(current.dailyDistances ?? []).map((day) => {
+                const modality = (name: string) => day.modalities.find((item) => item.modality === name)
+                return <tr key={day.date}>
+                  <th>{dateLabel(day.date)}</th>
+                  <td>{modality('treadmill')?.distanceM == null ? '0.00 km' : `${(Number(modality('treadmill')?.distanceM) / 1000).toFixed(2)} km · ${formatPace(modality('treadmill')?.paceSecondsPerKm)}`}</td>
+                  <td>{modality('outdoor')?.distanceM == null ? '0.00 km' : `${(Number(modality('outdoor')?.distanceM) / 1000).toFixed(2)} km · ${formatPace(modality('outdoor')?.paceSecondsPerKm)}`}</td>
+                  <td>{modality('other')?.distanceM == null ? '0.00 km' : `${(Number(modality('other')?.distanceM) / 1000).toFixed(2)} km`}</td>
+                  <td>{day.sources.length ? day.sources.map((source) => <Link key={source.activityId} to={source.href}>{source.label}</Link>) : '—'}</td>
                 </tr>
               })}</tbody>
             </table></div>

@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import {
+  ActivitiesService,
   PlansService,
   SessionsService,
+  type ActivitySummaryResponse,
   type PlannedSessionResponse,
 } from '../api/generated'
 import { EmptyState, ErrorState, LoadingState } from '../components/States'
@@ -42,6 +44,17 @@ export function CalendarPage() {
     retry: false,
   })
   const dates = useMemo(() => calendarDates(view, cursor), [cursor, view])
+  const activities = useQuery({
+    queryKey: ['calendar-activities', dates[0], dates[dates.length - 1]],
+    queryFn: () => ActivitiesService.getActivities({
+      page: 1,
+      pageSize: 100,
+      from: dates[0],
+      to: dates[dates.length - 1],
+      sort: 'startedAt',
+      direction: 'asc',
+    }),
+  })
   const visibleSessions = useMemo(() => {
     if (!plan.data) return []
     const visible = new Set(dates)
@@ -81,6 +94,13 @@ export function CalendarPage() {
     const sessions = sessionsByDate.get(session.scheduledDate) ?? []
     sessions.push(session)
     sessionsByDate.set(session.scheduledDate, sessions)
+  }
+  const activitiesByDate = new Map<string, ActivitySummaryResponse[]>()
+  for (const activity of activities.data?.items ?? []) {
+    const date = activity.startedAtLocal.slice(0, 10)
+    const items = activitiesByDate.get(date) ?? []
+    items.push(activity)
+    activitiesByDate.set(date, items)
   }
   const month = parseLocalDate(cursor).getMonth()
   const statuses = completions.data?.statuses ?? {}
@@ -130,6 +150,7 @@ export function CalendarPage() {
       {completions.data && completions.data.unavailable > 0 && (
         <p className="calendar-warning" role="status">No se pudo confirmar el estado de {completions.data.unavailable} {completions.data.unavailable === 1 ? 'sesión' : 'sesiones'}; se muestran en gris.</p>
       )}
+      {activities.isError && <p className="calendar-warning" role="status">No se pudieron cargar las actividades realizadas; el plan sigue disponible.</p>}
 
       {view === 'month' && (
         <MonthCalendar
@@ -140,6 +161,7 @@ export function CalendarPage() {
           planEnd={plan.data.version.periodEnd}
           planVersionId={plan.data.version.id}
           sessionsByDate={sessionsByDate}
+          activitiesByDate={activitiesByDate}
           statuses={statuses}
         />
       )}
@@ -153,6 +175,7 @@ export function CalendarPage() {
               inPlan={isWithinPeriod(date, plan.data.version.periodStart, plan.data.version.periodEnd)}
               planVersionId={plan.data.version.id}
               sessions={sessionsByDate.get(date) ?? []}
+              activities={activitiesByDate.get(date) ?? []}
               statuses={statuses}
             />
           ))}
@@ -166,6 +189,7 @@ export function CalendarPage() {
             inPlan={isWithinPeriod(cursor, plan.data.version.periodStart, plan.data.version.periodEnd)}
             planVersionId={plan.data.version.id}
             sessions={sessionsByDate.get(cursor) ?? []}
+            activities={activitiesByDate.get(cursor) ?? []}
             statuses={statuses}
             expanded
           />
@@ -183,6 +207,7 @@ function MonthCalendar({
   planEnd,
   planVersionId,
   sessionsByDate,
+  activitiesByDate,
   statuses,
 }: {
   dates: string[]
@@ -192,6 +217,7 @@ function MonthCalendar({
   planEnd: string
   planVersionId: string
   sessionsByDate: Map<string, PlannedSessionResponse[]>
+  activitiesByDate: Map<string, ActivitySummaryResponse[]>
   statuses: Record<string, string | null>
 }) {
   return (
@@ -200,6 +226,7 @@ function MonthCalendar({
         {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((weekday) => <span className="calendar-weekday" key={weekday}>{weekday}</span>)}
         {dates.map((date) => {
           const sessions = sessionsByDate.get(date) ?? []
+          const activities = activitiesByDate.get(date) ?? []
           const inPlan = isWithinPeriod(date, planStart, planEnd)
           const outsideMonth = parseLocalDate(date).getMonth() !== month
           return (
@@ -215,7 +242,8 @@ function MonthCalendar({
                     status={statuses[session.id]}
                   />
                 ))}
-                {sessions.length === 0 && inPlan && <span className="rest-label">Descanso</span>}
+                {activities.map((activity) => <ActivityLink activity={activity} compact key={activity.id} />)}
+                {sessions.length === 0 && activities.length === 0 && inPlan && <span className="rest-label">Descanso</span>}
               </div>
             </div>
           )
@@ -231,6 +259,7 @@ function CalendarDay({
   inPlan,
   planVersionId,
   sessions,
+  activities,
   statuses,
   expanded = false,
 }: {
@@ -239,6 +268,7 @@ function CalendarDay({
   inPlan: boolean
   planVersionId: string
   sessions: PlannedSessionResponse[]
+  activities: ActivitySummaryResponse[]
   statuses: Record<string, string | null>
   expanded?: boolean
 }) {
@@ -261,7 +291,8 @@ function CalendarDay({
             expanded={expanded}
           />
         ))}
-        {sessions.length === 0 && (
+        {activities.map((activity) => <ActivityLink activity={activity} key={activity.id} expanded={expanded} />)}
+        {sessions.length === 0 && activities.length === 0 && (
           <div className="calendar-rest">
             <span aria-hidden="true">○</span>
             <div><strong>{inPlan ? 'Descanso' : 'Sin programación'}</strong><p>{inPlan ? 'No hay una sesión prevista para este día.' : 'Este día está fuera del periodo del plan publicado.'}</p></div>
@@ -269,6 +300,30 @@ function CalendarDay({
         )}
       </div>
     </article>
+  )
+}
+
+function ActivityLink({
+  activity,
+  compact = false,
+  expanded = false,
+}: {
+  activity: ActivitySummaryResponse
+  compact?: boolean
+  expanded?: boolean
+}) {
+  const distance = activity.distanceM == null ? null : `${(Number(activity.distanceM) / 1000).toFixed(2)} km`
+  const duration = activity.durationSeconds == null ? null : `${Math.round(Number(activity.durationSeconds) / 60)} min`
+  const metrics = [distance, duration].filter(Boolean).join(' · ')
+  return (
+    <Link className={`calendar-activity${compact ? ' compact' : ''}`} to={`/activities?activity=${encodeURIComponent(activity.id)}`}>
+      {!compact && <span className="calendar-activity-icon" aria-hidden="true">✓</span>}
+      <span className="calendar-session-copy">
+        <strong>{activity.title ?? activity.activityType.replaceAll('_', ' ')}</strong>
+        {!compact && <small>Realizado{activity.modality ? ` · ${activity.modality === 'treadmill' ? 'Caminadora' : activity.modality === 'outdoor' ? 'Exterior' : activity.modality}` : ''}</small>}
+        {expanded && metrics && <span className="calendar-session-metrics">{metrics}</span>}
+      </span>
+    </Link>
   )
 }
 

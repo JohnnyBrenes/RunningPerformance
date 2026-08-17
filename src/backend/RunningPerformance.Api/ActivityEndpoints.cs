@@ -30,6 +30,8 @@ public static class ActivityEndpoints
         string? modality,
         DateOnly? from,
         DateOnly? to,
+        decimal? minDistanceM,
+        decimal? maxDistanceM,
         string? sort,
         string? direction,
         int page,
@@ -54,6 +56,16 @@ public static class ActivityEndpoints
         if (from.HasValue && to.HasValue && from > to)
         {
             errors["from"] = ["From must not be later than to."];
+        }
+
+        if (minDistanceM is < 0 || maxDistanceM is < 0)
+        {
+            errors["distance"] = ["Distance filters must not be negative."];
+        }
+
+        if (minDistanceM.HasValue && maxDistanceM.HasValue && minDistanceM > maxDistanceM)
+        {
+            errors["minDistanceM"] = ["Minimum distance must not exceed maximum distance."];
         }
 
         var sortColumn = sort?.ToLowerInvariant() switch
@@ -102,6 +114,18 @@ public static class ActivityEndpoints
         {
             filters.Add("started_at_local < @to_exclusive");
             command.Parameters.AddWithValue("to_exclusive", to.Value.AddDays(1).ToDateTime(TimeOnly.MinValue));
+        }
+
+        if (minDistanceM.HasValue)
+        {
+            filters.Add("distance_m >= @min_distance_m");
+            command.Parameters.AddWithValue("min_distance_m", minDistanceM.Value);
+        }
+
+        if (maxDistanceM.HasValue)
+        {
+            filters.Add("distance_m <= @max_distance_m");
+            command.Parameters.AddWithValue("max_distance_m", maxDistanceM.Value);
         }
 
         var where = filters.Count == 0 ? string.Empty : $"where {string.Join(" and ", filters)}";

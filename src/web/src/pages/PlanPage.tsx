@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { PlansService, ProfileService, type PlannedExerciseResponse, type PlannedSessionResponse, type TrainingPlanDetailResponse } from '../api/generated'
 import { EmptyState, ErrorState, LoadingState } from '../components/States'
 import { SessionCompletionPanel } from '../components/SessionCompletionPanel'
@@ -10,6 +11,7 @@ export function PlanPage() {
   const queryClient = useQueryClient()
   const [versionId, setVersionId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('version'))
   const [sessionId, setSessionId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('session'))
+  const [weekStart, setWeekStart] = useState<string | null>(null)
   const [creatingDraft, setCreatingDraft] = useState(false)
   const [draftReason, setDraftReason] = useState('Ajuste semanal a partir de la versión publicada.')
   const [editing, setEditing] = useState<PlannedSessionResponse | null>(null)
@@ -35,8 +37,20 @@ export function PlanPage() {
   useEffect(() => {
     if (!detail) return
     const today = localDateKey()
-    const preferred = detail.sessions.find((session) => session.scheduledDate === today) ?? detail.sessions[0]
-    if (!detail.sessions.some((session) => session.id === sessionId)) setSessionId(preferred?.id ?? null)
+    const currentWeekStart = mondayOf(today)
+    const requested = detail.sessions.find((session) => session.id === sessionId)
+    const preferred = requested
+      ?? detail.sessions.find((session) => session.scheduledDate === today)
+      ?? detail.sessions.find((session) => mondayOf(session.scheduledDate) === currentWeekStart)
+      ?? detail.sessions.find((session) => session.scheduledDate >= today)
+      ?? detail.sessions.at(-1)
+    if (!requested) setSessionId(preferred?.id ?? null)
+    if (!weekStart || !requested) setWeekStart(preferred ? mondayOf(preferred.scheduledDate) : currentWeekStart)
+  }, [detail, sessionId, weekStart])
+
+  useEffect(() => {
+    if (!detail || window.location.hash !== '#completion') return
+    requestAnimationFrame(() => document.getElementById('completion')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }, [detail, sessionId])
 
   const refreshPlans = async () => {
@@ -94,14 +108,29 @@ export function PlanPage() {
   if (historical.isError) return <ErrorState message={readableApiError(historical.error)} retry={() => void historical.refetch()} />
   if (!planSummary || !detail || !current.data) return <EmptyState title="Todavía no hay un plan">La primera versión publicada aparecerá aquí.</EmptyState>
 
-  const selectedSession = detail.sessions.find((session) => session.id === sessionId) ?? detail.sessions[0]
+  const requestedSession = detail.sessions.find((session) => session.id === sessionId) ?? detail.sessions[0]
+  const selectedWeekStart = weekStart ?? mondayOf(requestedSession.scheduledDate)
+  const selectedWeekEnd = addDays(selectedWeekStart, 6)
+  const weekSessions = detail.sessions.filter((session) => session.scheduledDate >= selectedWeekStart && session.scheduledDate <= selectedWeekEnd)
+  const selectedSession = weekSessions.find((session) => session.id === sessionId) ?? weekSessions[0]
   const draft = planSummary.versions.find((version) => version.status === 'draft')
+
+  const changeWeek = (offset: number) => {
+    const nextWeekStart = addDays(selectedWeekStart, offset * 7)
+    const nextWeekEnd = addDays(nextWeekStart, 6)
+    const nextSession = detail.sessions.find((session) => session.scheduledDate >= nextWeekStart && session.scheduledDate <= nextWeekEnd)
+    setWeekStart(nextWeekStart)
+    setSessionId(nextSession?.id ?? sessionId)
+  }
 
   return (
     <div className="page plan-page">
       <header className="page-heading split-heading">
         <div><p className="eyebrow">Plan de entrenamiento</p><h1>{detail.name}</h1><p>{detail.purpose}</p></div>
-        <span className={`version-status ${detail.version.status}`}>v{detail.version.versionNumber} · {versionStatusLabel(detail.version.status)}</span>
+        <div className="plan-heading-actions">
+          {detail.version.status !== 'draft' && <a className="button primary" href="#completion">Registrar entrenamiento</a>}
+          <span className={`version-status ${detail.version.status}`}>v{detail.version.versionNumber} · {versionStatusLabel(detail.version.status)}</span>
+        </div>
       </header>
 
       <section className="version-panel" aria-labelledby="versions-title">
@@ -117,10 +146,12 @@ export function PlanPage() {
       </section>
 
       <section className="section-block">
-        <div className="section-heading"><div><span className="section-label">Semana activa</span><h2>Calendario</h2></div><span className="date-chip">{formatPeriod(detail.version.periodStart, detail.version.periodEnd)}</span></div>
+        <div className="section-heading"><div><span className="section-label">Semana seleccionada</span><h2>Sesiones</h2></div><div className="week-navigation"><button className="icon-button" type="button" aria-label="Semana anterior" onClick={() => changeWeek(-1)}>←</button><span className="date-chip">{formatPeriod(selectedWeekStart, selectedWeekEnd)}</span><button className="icon-button" type="button" aria-label="Semana siguiente" onClick={() => changeWeek(1)}>→</button></div></div>
         <div className="week-strip" role="list" aria-label="Sesiones de la semana">
-          {detail.sessions.map((session) => <button className={session.id === selectedSession?.id ? 'active' : ''} type="button" key={session.id} onClick={() => setSessionId(session.id)}><span>{weekday(session.scheduledDate)}</span><strong>{dayNumber(session.scheduledDate)}</strong><small>{sessionTypeLabel(session.sessionType)}</small>{session.scheduledDate === localDateKey() && <i>Hoy</i>}</button>)}
+          {weekSessions.map((session) => <button className={session.id === selectedSession?.id ? 'active' : ''} type="button" key={session.id} onClick={() => setSessionId(session.id)}><span>{weekday(session.scheduledDate)}</span><strong>{dayNumber(session.scheduledDate)}</strong><small>{sessionTypeLabel(session.sessionType)}</small>{session.scheduledDate === localDateKey() && <i>Hoy</i>}</button>)}
         </div>
+        {weekSessions.length === 0 && <p className="inline-empty">No hay sesiones planificadas para esta semana.</p>}
+        <Link className="text-link" to="/calendar">Cambiar de semana en el calendario →</Link>
       </section>
 
       {selectedSession && <><SessionGuide detail={detail} session={selectedSession} sex={profile.data.sex} edit={detail.version.status === 'draft' ? () => openSessionEdit(selectedSession) : undefined} /><SessionCompletionPanel session={selectedSession} planVersionStatus={detail.version.status} /></>}
@@ -135,7 +166,7 @@ function SessionGuide({ detail, session, sex, edit }: { detail: TrainingPlanDeta
     <section className="session-guide" aria-labelledby="session-title">
       <header className="session-hero">
         <div><span className="section-label">{fullDate(session.scheduledDate)}</span><h2 id="session-title">{sessionTypeLabel(session.sessionType)}</h2><p>{session.objective}</p></div>
-        <div className="session-metrics"><span><small>Duración</small><strong>{minutes(session.durationSeconds)}</strong></span><span><small>Esfuerzo</small><strong>{rpe(session.targetRpeMin, session.targetRpeMax)}</strong></span>{edit && <button className="button secondary" type="button" onClick={edit}>Ajustar sesión</button>}</div>
+        <div className="session-metrics"><span><small>Duración</small><strong>{minutes(session.durationSeconds)}</strong></span><span><small>Esfuerzo</small><strong>{rpe(session.targetRpeMin, session.targetRpeMax)}</strong></span>{edit && <button className="button secondary" type="button" onClick={edit}>Ajustar sesión</button>}<small className="rpe-help">RPE: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo).</small></div>
       </header>
 
       <div className="session-overview">
@@ -188,6 +219,9 @@ function localDateKey() {
 }
 
 function parseDate(value: string) { return new Date(`${value}T00:00:00`) }
+function dateKey(value: Date) { return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}` }
+function mondayOf(value: string) { const date = parseDate(value); const day = date.getDay() || 7; date.setDate(date.getDate() - day + 1); return dateKey(date) }
+function addDays(value: string, days: number) { const date = parseDate(value); date.setDate(date.getDate() + days); return dateKey(date) }
 function weekday(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'short' }).format(parseDate(value)).replace('.', '') }
 function dayNumber(value: string) { return parseDate(value).getDate() }
 function fullDate(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' }).format(parseDate(value)) }

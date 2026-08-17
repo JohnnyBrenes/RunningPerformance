@@ -1,10 +1,17 @@
-import type { DashboardTrendWeekResponse, QuotaResourceResponse } from '../api/generated'
+import type { DashboardDailyDistanceResponse, DashboardTrendWeekResponse, QuotaResourceResponse } from '../api/generated'
 
 export type TrendChartRow = {
   week: string
   treadmillKm: number | null
   outdoorKm: number | null
   otherKm: number | null
+}
+
+export type DailyDistanceChartRow = {
+  date: string
+  treadmillKm: number
+  outdoorKm: number
+  otherKm: number
 }
 
 export function toNumber(value: number | string | null | undefined): number | null {
@@ -46,6 +53,23 @@ export function buildTrendChartRows(trends: DashboardTrendWeekResponse[]): Trend
     return {
       week: new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', timeZone: 'UTC' })
         .format(new Date(`${trend.weekStart}T12:00:00Z`)),
+      treadmillKm: distance('treadmill'),
+      outdoorKm: distance('outdoor'),
+      otherKm: distance('other'),
+    }
+  })
+}
+
+export function buildDailyDistanceChartRows(days: DashboardDailyDistanceResponse[]): DailyDistanceChartRow[] {
+  return days.map((day) => {
+    const distance = (modality: string) => {
+      const value = day.modalities.find((item) => item.modality === modality)?.distanceM
+      const meters = toNumber(value)
+      return meters == null ? 0 : Math.round((meters / 1000) * 100) / 100
+    }
+    return {
+      date: new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+        .format(new Date(`${day.date}T12:00:00Z`)),
       treadmillKm: distance('treadmill'),
       outdoorKm: distance('outdoor'),
       otherKm: distance('other'),

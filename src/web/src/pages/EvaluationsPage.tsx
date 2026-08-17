@@ -16,6 +16,7 @@ export function EvaluationsPage() {
   const queryClient = useQueryClient()
   const [evaluationId, setEvaluationId] = useState<string | null>(null)
   const [snapshotStatus, setSnapshotStatus] = useState('provisional')
+  const [weekStart, setWeekStart] = useState(previousMonday())
   const evaluations = useQuery({ queryKey: ['evaluations'], queryFn: () => EvaluationsService.getWeeklyEvaluations() })
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export function EvaluationsPage() {
 
   const createSnapshot = useMutation({
     mutationFn: () => EvaluationsService.createWeeklyEvaluationSnapshot({
-      requestBody: { weekStart: currentMonday(), status: snapshotStatus },
+      requestBody: { weekStart, status: snapshotStatus },
     }),
     onSuccess: async (created) => {
       setEvaluationId(created.evaluation.id)
@@ -44,10 +45,11 @@ export function EvaluationsPage() {
   return (
     <div className="page evaluations-page">
       <header className="page-heading split-heading">
-        <div><p className="eyebrow">Cierre semanal</p><h1>Evaluación P1–P5</h1><p>Snapshot explicable, evidencia navegable y decisión humana antes de ajustar el plan.</p></div>
+        <div><p className="eyebrow">Cierre semanal</p><h1>Evaluación P1–P5</h1><p>Elige la semana terminada, revisa sus datos y confirma la decisión antes de ajustar el plan.</p></div>
         <form className="snapshot-actions" onSubmit={(event) => { event.preventDefault(); createSnapshot.mutate() }}>
-          <label>Nuevo snapshot<select value={snapshotStatus} onChange={(event) => setSnapshotStatus(event.target.value)}><option value="provisional">Provisional</option><option value="final">Final</option></select></label>
-          <button className="button primary" disabled={createSnapshot.isPending}>{createSnapshot.isPending ? 'Congelando…' : 'Crear'}</button>
+          <label>Semana que inicia<input type="date" required value={weekStart} onChange={(event) => setWeekStart(event.target.value)} /></label>
+          <label>Tipo de cierre<select value={snapshotStatus} onChange={(event) => setSnapshotStatus(event.target.value)}><option value="provisional">Provisional</option><option value="final">Final</option></select></label>
+          <button className="button primary" disabled={createSnapshot.isPending}>{createSnapshot.isPending ? 'Calculando…' : 'Evaluar semana'}</button>
         </form>
       </header>
       {createSnapshot.isError && <p className="form-alert" role="alert">{readableApiError(createSnapshot.error)}</p>}
@@ -78,7 +80,7 @@ function EvaluationDetail({ detail, onChanged }: { detail: WeeklyEvaluationDetai
 
     <section className="evaluation-sources section-block" aria-labelledby="sources-title">
       <div className="section-heading"><div><span className="section-label">Fuentes congeladas</span><h2 id="sources-title">Sesiones de la semana</h2></div><span className="date-chip">{detail.sessions.length} fuentes</span></div>
-      <div className="source-list">{detail.sessions.map((session) => <article key={session.id}><div><strong>{session.scheduledDate ? fullDate(session.scheduledDate) : 'Actividad sin plan'}</strong><span>{sessionTypeLabel(session.sessionType)}</span></div><span className={`source-status ${session.executionStatus ? '' : 'missing'}`}>{executionLabel(session.executionStatus)}</span>{session.plannedSessionId && detail.evaluation.planVersionId && <a href={`/plan?version=${detail.evaluation.planVersionId}&session=${session.plannedSessionId}`}>Abrir sesión</a>}</article>)}</div>
+      <div className="source-list">{detail.sessions.map((session) => <article key={session.id}><div><strong>{session.scheduledDate ? fullDate(session.scheduledDate) : 'Actividad sin plan'}</strong><span>{sessionTypeLabel(session.sessionType)}</span></div><span className={`source-status ${session.executionStatus ? '' : 'missing'}`}>{executionLabel(session.executionStatus)}</span>{session.plannedSessionId && detail.evaluation.planVersionId && <a href={`/plan?version=${detail.evaluation.planVersionId}&session=${session.plannedSessionId}#completion`}>Abrir sesión y registro</a>}</article>)}</div>
     </section>
 
     {detail.decision ? <DecisionRecord detail={detail} /> : <DecisionForm detail={detail} onChanged={onChanged} />}
@@ -152,7 +154,7 @@ export function formatMetricValue(metric: Pick<WeeklyMetricValueResponse, 'statu
   return `${round(value)}${metric.unit ? ` ${metric.unit}` : ''}`
 }
 
-function currentMonday() { const date = new Date(); const day = date.getDay() || 7; date.setDate(date.getDate() - day + 1); return localDate(date) }
+export function previousMonday(reference = new Date()) { const date = new Date(reference); const day = date.getDay() || 7; date.setDate(date.getDate() - day + 1 - 7); return localDate(date) }
 function localDate(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
 function parseDate(value: string) { return new Date(`${value}T00:00:00`) }
 function formatPeriod(start: string, end: string) { return `${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(start))} – ${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(end))}` }
@@ -167,4 +169,4 @@ function sessionTypeLabel(value: string | null) { return value ? ({ strength_mob
 function adjustmentTypeLabel(value: string) { return ({ objective: 'Objetivo ajustado', reschedule: 'Sesión reprogramada', reschedule_and_objective: 'Fecha y objetivo ajustados' } as Record<string, string>)[value] ?? value }
 function sourceTypeLabel(value: string) { return ({ planned_session: 'Sesión planificada', activity: 'Actividad realizada', session_checkin: 'Check-in', observation: 'Observación' } as Record<string, string>)[value] ?? value }
 function dimensionLabel(value: string) { return value.replace(/^session:[0-9a-f-]+$/, 'Carga de sesión').replaceAll(':', ' · ').replaceAll('_', ' ') }
-function metricDescription(code: string) { return ({ P1: 'Los cinco resultados permanecen separados.', P2: 'Tiempo/distancia; ritmos de cinta y exterior no se mezclan.', P3: 'Observación explícita y respuesta posterior.', P4: 'Minutos × RPE por sesión, modalidad y semana.', P5: 'Cada componente conserva su propia señal y sus ausencias.' } as Record<string, string>)[code] }
+function metricDescription(code: string) { return ({ P1: 'Los cinco resultados permanecen separados.', P2: 'Tiempo/distancia; ritmos de cinta y exterior no se mezclan.', P3: 'Observación explícita y respuesta posterior.', P4: 'Minutos × RPE por sesión, modalidad y semana. RPE es la percepción del esfuerzo en escala de 1 a 10.', P5: 'Cada componente conserva su propia señal y sus ausencias.' } as Record<string, string>)[code] }

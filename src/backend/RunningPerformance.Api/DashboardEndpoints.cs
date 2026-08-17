@@ -44,6 +44,7 @@ public static class DashboardEndpoints
         var weeksByDate = await ReadTrendWeeksAsync(session, weeks, cancellationToken);
         await ReadModalitiesAsync(session, weeksByDate, cancellationToken);
         await ReadSourcesAsync(session, weeksByDate, cancellationToken);
+        var dailyDistances = await ReadDailyDistancesAsync(session, asOf, weeks, cancellationToken);
         var pillars = await ReadPillarsAsync(session, cancellationToken);
         var alerts = await ReadPendingAlertsAsync(session, cancellationToken);
         var quota = await ReadQuotaAsync(
@@ -60,6 +61,7 @@ public static class DashboardEndpoints
             nextSession,
             currentWeek,
             latestRecovery,
+            dailyDistances.Values.Select(item => item.ToResponse()).ToArray(),
             weeksByDate.Values.OrderBy(item => item.WeekStart).Select(item => item.ToResponse()).ToArray(),
             pillars,
             alerts,
@@ -344,6 +346,104 @@ public static class DashboardEndpoints
         }
     }
 
+    private static async Task<SortedDictionary<DateOnly, MutableDailyDistance>> ReadDailyDistancesAsync(
+        OwnerDbSession session,
+        DateOnly asOf,
+        int weeks,
+        CancellationToken cancellationToken)
+    {
+        var start = asOf.AddDays(-((weeks * 7) - 1));
+        var result = new SortedDictionary<DateOnly, MutableDailyDistance>();
+        for (var date = start; date <= asOf; date = date.AddDays(1))
+        {
+            result[date] = new MutableDailyDistance(date);
+        }
+
+        await using (var command = session.Connection.CreateCommand())
+        {
+            command.Transaction = session.Transaction;
+            command.CommandText = """
+                select activity.started_at_local::date,
+                  case when activity.modality = 'treadmill' then 'treadmill'
+                       when activity.modality = 'outdoor' then 'outdoor'
+                       else 'other' end as modality_group,
+                  count(*)::integer,
+                  sum(activity.distance_m)::numeric,
+                  sum(activity.duration_seconds)::numeric
+                from app.activities activity
+                where activity.activity_category = 'running'
+                  and activity.started_at_local::date between @start and @end
+                group by activity.started_at_local::date, modality_group
+                order by activity.started_at_local::date, modality_group;
+                """;
+            command.Parameters.AddWithValue("start", start);
+            command.Parameters.AddWithValue("end", asOf);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var date = reader.GetFieldValue<DateOnly>(0);
+                if (!result.TryGetValue(date, out var day))
+                {
+                    continue;
+                }
+
+                decimal? distance = reader.IsDBNull(3) ? null : reader.GetDecimal(3);
+                decimal? duration = reader.IsDBNull(4) ? null : reader.GetDecimal(4);
+                day.Modalities.Add(new DashboardModalityTrendResponse(
+                    reader.GetString(1),
+                    reader.GetInt32(2),
+                    distance,
+                    duration,
+                    DashboardRules.WeightedPaceSecondsPerKm(distance, duration)));
+            }
+        }
+
+        await using (var command = session.Connection.CreateCommand())
+        {
+            command.Transaction = session.Transaction;
+            command.CommandText = """
+                select activity.started_at_local::date,
+                  planned.id, planned.training_plan_version_id, activity.id,
+                  coalesce(activity.title, activity.activity_type)
+                from app.activities activity
+                left join app.activity_session_links link
+                  on link.owner_id = activity.owner_id
+                 and link.activity_id = activity.id
+                 and link.status = 'confirmed'
+                left join app.planned_sessions planned
+                  on planned.owner_id = link.owner_id
+                 and planned.id = link.planned_session_id
+                where activity.activity_category = 'running'
+                  and activity.started_at_local::date between @start and @end
+                order by activity.started_at_local, activity.id;
+                """;
+            command.Parameters.AddWithValue("start", start);
+            command.Parameters.AddWithValue("end", asOf);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var date = reader.GetFieldValue<DateOnly>(0);
+                if (!result.TryGetValue(date, out var day))
+                {
+                    continue;
+                }
+
+                Guid? sessionId = reader.IsDBNull(1) ? null : reader.GetGuid(1);
+                Guid? versionId = reader.IsDBNull(2) ? null : reader.GetGuid(2);
+                var activityId = reader.GetGuid(3);
+                day.Sources.Add(new DashboardSourceResponse(
+                    sessionId,
+                    activityId,
+                    reader.GetString(4),
+                    sessionId is not null && versionId is not null
+                        ? $"/plan?version={versionId}&session={sessionId}"
+                        : $"/activities?activity={activityId}"));
+            }
+        }
+
+        return result;
+    }
+
     private static async Task<IReadOnlyList<DashboardPillarResponse>> ReadPillarsAsync(
         OwnerDbSession session,
         CancellationToken cancellationToken)
@@ -590,6 +690,15 @@ public static class DashboardEndpoints
             Sources,
             evaluationId is null ? null : $"/evaluations?evaluation={evaluationId}");
     }
+
+    private sealed class MutableDailyDistance(DateOnly date)
+    {
+        public DateOnly Date { get; } = date;
+        public List<DashboardModalityTrendResponse> Modalities { get; } = [];
+        public List<DashboardSourceResponse> Sources { get; } = [];
+
+        public DashboardDailyDistanceResponse ToResponse() => new(Date, Modalities, Sources);
+    }
 }
 
 public sealed record DashboardResponse(
@@ -598,6 +707,7 @@ public sealed record DashboardResponse(
     DashboardNextSessionResponse? NextSession,
     DashboardCurrentWeekResponse CurrentWeek,
     DashboardRecoveryResponse? LatestRecovery,
+    IReadOnlyList<DashboardDailyDistanceResponse> DailyDistances,
     IReadOnlyList<DashboardTrendWeekResponse> Trends,
     IReadOnlyList<DashboardPillarResponse> LatestPillars,
     IReadOnlyList<DashboardAlertResponse> Alerts,
@@ -650,6 +760,11 @@ public sealed record DashboardTrendWeekResponse(
     IReadOnlyList<DashboardModalityTrendResponse> Modalities,
     IReadOnlyList<DashboardSourceResponse> Sources,
     string? EvaluationHref);
+
+public sealed record DashboardDailyDistanceResponse(
+    DateOnly Date,
+    IReadOnlyList<DashboardModalityTrendResponse> Modalities,
+    IReadOnlyList<DashboardSourceResponse> Sources);
 
 public sealed record DashboardModalityTrendResponse(
     string Modality,

@@ -20,6 +20,8 @@ export class ActivitiesService {
         modality,
         from,
         to,
+        minDistanceM,
+        maxDistanceM,
         sort,
         direction,
     }: {
@@ -30,6 +32,8 @@ export class ActivitiesService {
         modality?: string,
         from?: string,
         to?: string,
+        minDistanceM?: number | string,
+        maxDistanceM?: number | string,
         sort?: string,
         direction?: string,
     }): CancelablePromise<ActivityPageResponse> {
@@ -42,6 +46,8 @@ export class ActivitiesService {
                 'modality': modality,
                 'from': from,
                 'to': to,
+                'minDistanceM': minDistanceM,
+                'maxDistanceM': maxDistanceM,
                 'sort': sort,
                 'direction': direction,
                 'page': page,

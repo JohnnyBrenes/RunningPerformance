@@ -149,6 +149,7 @@ export function SessionCompletionPanel({ session, planVersionStatus }: {
         <Metric label="RPE" value={data.load.sessionRpe == null ? 'ND' : String(data.load.sessionRpe)} />
         <Metric label="sRPE" value={data.load.srpeLoad == null ? 'ND' : `${data.load.srpeLoad} UA`} />
       </div>
+      <p className="rpe-help"><strong>RPE</strong>: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo). <strong>sRPE</strong>: duración en minutos × RPE.</p>
 
       <div className="linked-activities">
         <div className="subheading"><h3>Actividades relacionadas</h3><button className="text-button" type="button" disabled={propose.isPending} onClick={() => propose.mutate()}>Proponer coincidencia única</button></div>
@@ -182,7 +183,7 @@ export function SessionCompletionPanel({ session, planVersionStatus }: {
           <div className="subheading"><h3>Check-in</h3><small>ND permanece vacío</small></div>
           <div className="checkin-tabs" role="tablist" aria-label="Ventana del check-in">{checkinWindows.map(([code, label]) => <button type="button" role="tab" aria-selected={checkinWindow === code} className={checkinWindow === code ? 'active' : ''} key={code} onClick={() => setCheckinWindow(code)}>{label}</button>)}</div>
           <div className="checkin-grid">
-            {checkinWindow === 'immediate' && <label>RPE global<input aria-label="RPE global" inputMode="decimal" type="number" min="1" max="10" step="0.5" value={checkin.sessionRpe} onChange={(event) => update(setCheckin, 'sessionRpe', event.target.value)} /></label>}
+            {checkinWindow === 'immediate' && <label>RPE global <small>Percepción del esfuerzo, 1–10</small><input aria-label="RPE global" inputMode="decimal" type="number" min="1" max="10" step="0.5" value={checkin.sessionRpe} onChange={(event) => update(setCheckin, 'sessionRpe', event.target.value)} /></label>}
             <label>Dolor máximo<input inputMode="decimal" type="number" min="0" max="10" step="0.5" value={checkin.pain} onChange={(event) => update(setCheckin, 'pain', event.target.value)} /></label>
             <label>Ubicación<input maxLength={120} value={checkin.painLocation} onChange={(event) => update(setCheckin, 'painLocation', event.target.value)} /></label>
             <label>¿Cambió la zancada?<select value={checkin.gaitChanged} onChange={(event) => update(setCheckin, 'gaitChanged', event.target.value)}><option value="">ND</option><option value="false">No</option><option value="true">Sí</option></select></label>

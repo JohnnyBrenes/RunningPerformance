@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { formatMetricValue } from './EvaluationsPage'
+import { formatMetricValue, previousMonday } from './EvaluationsPage'
 
 describe('weekly metric presentation', () => {
+  it('defaults a new evaluation to the most recently completed week', () => {
+    expect(previousMonday(new Date('2026-08-17T12:00:00'))).toBe('2026-08-10')
+  })
+
   it('renders a stored missing value as ND without converting it to zero', () => {
     expect(formatMetricValue({ status: 'missing', numericValue: null, booleanValue: null, textValue: null, unit: 'm', dimension: 'actual_distance_m:outdoor' })).toBe('ND')
   })
