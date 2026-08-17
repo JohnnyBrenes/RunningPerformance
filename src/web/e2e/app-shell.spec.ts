@@ -62,7 +62,7 @@ test('renders profile, races, exercise media and the published plan without hori
 
   await page.goto('/evaluations')
   await expect(page.getByLabel('Semana que inicia')).toBeVisible()
-  await expect(page.getByRole('button', { name: /Ver resumen|Crear resumen/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Actualizar análisis|Evaluar semana/ })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
   await page.goto('/profile')
@@ -104,9 +104,11 @@ test('renders profile, races, exercise media and the published plan without hori
   await expectNoHorizontalOverflow(page)
 
   await page.goto('/evaluations')
-  await expect(page.getByRole('heading', { name: 'Cierre de semana' })).toBeVisible()
-  await expect(page.locator('.traffic-card')).toContainText('Revisar antes de continuar')
-  await expect(page.getByRole('heading', { name: 'Resumen de la semana' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Revisión semanal' })).toBeVisible()
+  await expect(page.locator('.coach-verdict')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Perfil actual del corredor' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Qué se evaluó' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Cómo se tomó la decisión' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Entrenamientos', exact: true })).toBeVisible()
   await expect(page.locator('.source-list')).toContainText('Planificada:')
   await expect(page.getByText(/^Evidencia(?: \(|$)/)).toHaveCount(0)
@@ -120,7 +122,7 @@ test('renders profile, races, exercise media and the published plan without hori
   await expectNoHorizontalOverflow(page)
 
   if ((page.viewportSize()?.width ?? 1000) < 896) {
-    await page.getByText('Menú', { exact: true }).click()
+    await page.getByRole('button', { name: 'Más', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
   } else {
     await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
@@ -206,10 +208,8 @@ test('requires a human decision and creates a new plan draft for an adjustment',
   const decisionInput = page.getByRole('combobox', { name: 'Qué hacer' })
   if (await decisionInput.count()) {
     await decisionInput.selectOption('adapt')
-    await page.getByLabel('Notas de la semana').fill('La semana sintética conserva resultados y respuesta posterior pendientes.')
-    await page.getByLabel('Nuevo objetivo').fill('Objetivo sintético adaptado; conservar carga y priorizar respuesta posterior.')
-    await page.getByLabel('Motivo del cambio').fill('Decisión humana APP-011 sobre los registros sintéticos.')
-    await page.getByRole('button', { name: 'Guardar decisión' }).click()
+    await page.getByLabel(/Nota personal/).fill('La semana sintética conserva resultados y respuesta posterior pendientes.')
+    await page.getByRole('button', { name: 'Aceptar y crear borrador' }).click()
   }
 
   await expect(page.getByRole('heading', { name: 'Adaptar una sesión', exact: true })).toBeVisible()

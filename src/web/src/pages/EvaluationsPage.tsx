@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { EvaluationsService, type WeeklyEvaluationDetailResponse, type WeeklyEvaluationSessionResponse, type WeeklyEvaluationSummaryResponse, type WeeklyMetricValueResponse } from '../api/generated'
+import { ActivitiesService, EvaluationsService, PlansService, RacesService, type PlannedSessionResponse, type TrainingPlanDetailResponse, type WeeklyEvaluationDetailResponse, type WeeklyEvaluationSummaryResponse, type WeeklyMetricValueResponse } from '../api/generated'
 import { EmptyState, ErrorState, LoadingState } from '../components/States'
 import { readableApiError } from '../lib/api'
+import { buildCoachReview, type CoachReview } from '../lib/coach'
 
 const metricTitles: Record<string, string> = {
   P1: 'Cumplimiento por tipo', P2: 'Volumen de running', P3: 'Tirada larga exterior', P4: 'Carga interna sRPE', P5: 'Seguridad y recuperación',
@@ -31,21 +32,18 @@ export function EvaluationsPage() {
 
   return <div className="page evaluations-page">
     <header className="page-heading weekly-review-heading">
-      <div><p className="eyebrow">Cierre semanal</p><h1>Cierre de semana</h1><p>Elige una semana, revisa lo realizado y decide cómo continuar con el plan.</p></div>
+      <div><p className="eyebrow">Coach semanal</p><h1>Revisión semanal</h1><p>El sistema califica la semana y propone el siguiente paso hacia tu carrera principal.</p></div>
       <form className="weekly-review-controls" onSubmit={(event) => {
         event.preventDefault()
-        if (selectedWeek) {
-          setEvaluationId(selectedWeek.id)
-          document.querySelector('#weekly-review')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        } else createReview.mutate()
+        createReview.mutate()
       }}>
         <label>Semana que inicia<input type="date" required max={previousMonday()} value={weekStart} onChange={(event) => setWeekStart(event.target.value)} /></label>
         {weeklyChoices.length > 0 && <label>Semanas guardadas<select value={selectedWeek?.weekStart ?? ''} onChange={(event) => event.target.value && setWeekStart(event.target.value)}><option value="">Elegir una semana</option>{weeklyChoices.map((evaluation) => <option key={evaluation.id} value={evaluation.weekStart}>{formatPeriod(evaluation.weekStart, evaluation.weekEnd)}</option>)}</select></label>}
-        <button className="button primary" disabled={createReview.isPending}>{createReview.isPending ? 'Creando resumen…' : selectedWeek ? 'Ver resumen' : 'Crear resumen'}</button>
+        <button className="button primary" disabled={createReview.isPending}>{createReview.isPending ? 'Analizando…' : selectedWeek ? 'Actualizar análisis' : 'Evaluar semana'}</button>
       </form>
     </header>
     {createReview.isError && <p className="form-alert" role="alert">{readableApiError(createReview.error)}</p>}
-    {!evaluationId && !createReview.isPending && <EmptyState title="Esta semana todavía no tiene cierre">Crea el resumen cuando hayas terminado de registrar sus entrenamientos.</EmptyState>}
+    {!evaluationId && !createReview.isPending && <EmptyState title="Esta semana todavía no tiene evaluación">Evalúala cuando sus actividades y sensaciones estén registradas.</EmptyState>}
     {detail.isPending && <LoadingState label="Abriendo el resumen semanal" />}
     {detail.isError && <ErrorState message={readableApiError(detail.error)} retry={() => void detail.refetch()} />}
     {detail.data && <EvaluationDetail key={detail.data.evaluation.id} detail={detail.data} onChanged={async (updated) => {
@@ -56,6 +54,20 @@ export function EvaluationsPage() {
 }
 
 function EvaluationDetail({ detail, onChanged }: { detail: WeeklyEvaluationDetailResponse; onChanged: (detail: WeeklyEvaluationDetailResponse) => Promise<void> }) {
+  const coach = useQuery({
+    queryKey: ['coach-review', detail.evaluation.id, detail.evaluation.cutoffAt],
+    queryFn: async () => {
+      const currentPlan = await PlansService.getCurrentTrainingPlan()
+      const plan = detail.evaluation.planVersionId && currentPlan.version.id !== detail.evaluation.planVersionId
+        ? await PlansService.getTrainingPlanVersion({ planId: currentPlan.id, versionId: detail.evaluation.planVersionId })
+        : currentPlan
+      const [races, activities] = await Promise.all([
+        RacesService.getRaces(),
+        ActivitiesService.getActivities({ page: 1, pageSize: 100, from: offsetDate(detail.evaluation.weekStart, -84), to: detail.evaluation.weekEnd, sort: 'startedAt', direction: 'asc' }),
+      ])
+      return { review: buildCoachReview({ detail, plan, races, activities: activities.items }), plan }
+    },
+  })
   const grouped = useMemo(() => Object.fromEntries(['P1', 'P2', 'P3', 'P4', 'P5'].map((code) => [code, detail.metrics.filter((metric) => metric.metricCode === code)])), [detail.metrics])
   const completed = detail.sessions.filter((session) => session.executionStatus && completedStatuses.has(session.executionStatus)).length
   const runningDistance = findMetric(detail.metrics, 'P2', 'actual_distance_m:all')
@@ -66,22 +78,47 @@ function EvaluationDetail({ detail, onChanged }: { detail: WeeklyEvaluationDetai
   const perceivedRecovery = findMetric(detail.metrics, 'P5', 'perceived_recovery')
 
   return <div id="weekly-review" className="weekly-review">
-    <section className={`traffic-card ${detail.evaluation.trafficLight}`} aria-labelledby="traffic-title"><div className="traffic-light" aria-hidden="true"><i /><i /><i /></div><div><span className="section-label">Resultado general</span><h2 id="traffic-title">{trafficTitle(detail.evaluation.trafficLight)}</h2><p>{plainRationale(detail.evaluation.rationale)}</p><small>Calculado con los datos registrados hasta {formatDateTime(detail.evaluation.cutoffAt)}.</small></div></section>
-    <section className="section-block weekly-summary" aria-labelledby="summary-title"><div className="section-heading"><div><span className="section-label">Lo importante</span><h2 id="summary-title">Resumen de la semana</h2></div><span className="date-chip">{formatPeriod(detail.evaluation.weekStart, detail.evaluation.weekEnd)}</span></div><div className="weekly-summary-grid">
+    {coach.isPending && <LoadingState label="Preparando la evaluación del coach" />}
+    {coach.isError && <ErrorState message={`No se pudo construir la propuesta: ${readableApiError(coach.error)}`} retry={() => void coach.refetch()} />}
+    {coach.data && <CoachReviewPanel review={coach.data.review} evaluation={detail} />}
+    <section className="section-block weekly-summary" aria-labelledby="summary-title"><div className="section-heading"><div><span className="section-label">1 · Semana terminada</span><h2 id="summary-title">Qué se evaluó</h2></div><span className="date-chip">{formatPeriod(detail.evaluation.weekStart, detail.evaluation.weekEnd)}</span></div><div className="weekly-summary-grid">
       <SummaryCard label="Entrenamientos" value={`${completed} de ${detail.sessions.length}`} detail={completed === detail.sessions.length && detail.sessions.length > 0 ? 'Todos registrados' : `${detail.sessions.length - completed} sin completar`} />
-      <SummaryCard label="Running" value={primaryMetricValue(runningDistance)} detail={runningDuration ? primaryMetricValue(runningDuration) : 'Duración sin registrar'} />
+      <SummaryCard label="Running total" value={coach.data ? formatRaceDistance(coach.data.review.week.actualDistanceM) : primaryMetricValue(runningDistance)} detail={coach.data ? `${coach.data.review.week.actualRunCount} carreras; ${coach.data.review.week.unplannedRunCount} fuera del plan` : runningDuration ? primaryMetricValue(runningDuration) : 'Duración sin registrar'} />
       <SummaryCard label="Carga" value={primaryMetricValue(totalLoad)} detail="sRPE: minutos × esfuerzo percibido" />
       <SummaryCard label="Recuperación" value={recoverySummary(pain, fatigue, perceivedRecovery)} detail="Dolor, fatiga y recuperación percibida" />
     </div></section>
-    <section className="evaluation-sources section-block" aria-labelledby="sessions-title"><div className="section-heading"><div><span className="section-label">Una vez por entrenamiento</span><h2 id="sessions-title">Entrenamientos</h2></div><span className="date-chip">{detail.sessions.length} registrados</span></div>
-      {detail.sessions.length === 0 ? <p className="muted-copy">No hay entrenamientos registrados para esta semana.</p> : <div className="source-list">{detail.sessions.map((session) => {
+    <section className="evaluation-sources section-block" aria-labelledby="sessions-title"><div className="section-heading"><div><span className="section-label">Evidencia de la semana</span><h2 id="sessions-title">Entrenamientos</h2></div><span className="date-chip">{detail.sessions.length + (coach.data?.review.week.unplannedRunCount ?? 0)} registros</span></div>
+      {detail.sessions.length === 0 && !coach.data?.review.week.unplannedRunCount ? <p className="muted-copy">No hay entrenamientos registrados para esta semana.</p> : <div className="source-list">{detail.sessions.map((session) => {
         const dates = sessionDateLabels(session.scheduledDate, session.actualStartedAtLocal)
         return <article key={session.id}><div><strong>{dates.primary}</strong>{dates.planned && <span>{dates.planned}</span>}<span>{sessionTypeLabel(session.sessionType)}</span></div><span className={`source-status ${session.executionStatus ? '' : 'missing'}`}>{executionLabel(session.executionStatus)}</span>{session.plannedSessionId && detail.evaluation.planVersionId && <Link to={`/plan?version=${detail.evaluation.planVersionId}&session=${session.plannedSessionId}#completion`}>Abrir entrenamiento</Link>}{!session.plannedSessionId && session.activityId && <Link to={`/activities/${session.activityId}`}>Abrir actividad</Link>}</article>
-      })}</div>}
+      })}{coach.data?.review.week.unplannedActivities.map((activity) => <article className="unplanned" key={activity.id}><div><strong>Realizada: {fullActualDate(activity.startedAtLocal)}</strong><span>{activity.title ?? activity.activityType}</span><span>{activity.distanceM == null ? 'Sin distancia' : formatRaceDistance(activity.distanceM)}</span></div><span className="source-status extra">Fuera del plan</span><Link to={`/activities/${activity.id}`}>Abrir actividad</Link></article>)}</div>}
     </section>
-    <details className="technical-evaluation section-block"><summary>Ver desglose técnico P1–P5</summary><p>Estos son los cálculos internos del resumen. Los entrenamientos que los originan aparecen una sola vez en la lista anterior.</p><div className="metric-sections">{Object.entries(grouped).map(([code, metrics]) => <MetricSection code={code} metrics={metrics} key={code} />)}</div></details>
-    {detail.decision ? <DecisionRecord detail={detail} /> : <DecisionForm detail={detail} onChanged={onChanged} />}
+    <details className="technical-evaluation section-block"><summary>Ver desglose técnico P1–P5</summary><p>Estos son los cálculos internos del resumen. Los entrenamientos que los originan aparecen una sola vez en la lista anterior.</p><div className="metric-sections">{Object.entries(grouped).map(([code, metrics]) => code === 'P2' && coach.data ? <CoachVolumeSection review={coach.data.review} key={code} /> : <MetricSection code={code} metrics={metrics} key={code} />)}</div></details>
+    {detail.decision ? <DecisionRecord detail={detail} /> : coach.data && <DecisionForm detail={detail} coach={coach.data.review} plan={coach.data.plan} onChanged={onChanged} />}
   </div>
+}
+
+function CoachReviewPanel({ review, evaluation }: { review: CoachReview; evaluation: WeeklyEvaluationDetailResponse }) {
+  return <>
+    <section className={`coach-verdict ${review.grade}`} aria-labelledby="coach-verdict-title">
+      <header><div><span className="section-label">Evaluación del coach</span><h2 id="coach-verdict-title">{review.gradeLabel}</h2></div><span className={`safety-chip ${evaluation.evaluation.trafficLight}`}>Seguridad: {trafficLabel(evaluation.evaluation.trafficLight)}</span></header>
+      <p>{review.summary}</p>
+      <div className="goal-chain">
+        <article><span>Objetivo principal</span><strong>{review.primaryRace?.name ?? 'Sin carrera A definida'}</strong><small>{review.primaryRace ? `${formatRaceDistance(review.primaryRace.distanceM)} · ${formatFullDate(review.primaryRace.raceDate)} · ${review.daysToPrimaryRace} días${review.primaryRace.currentGoal?.goalTimeSeconds != null ? ` · meta ${formatClock(Number(review.primaryRace.currentGoal.goalTimeSeconds))}` : ''}` : 'Define una carrera con prioridad A'}</small></article>
+        <i aria-hidden="true">←</i>
+        <article><span>Carrera preparatoria</span><strong>{review.preparatoryRace?.name ?? 'Sin carrera previa'}</strong><small>{review.preparatoryRace ? `${formatRaceDistance(review.preparatoryRace.distanceM)} · ${formatFullDate(review.preparatoryRace.raceDate)} · ${review.daysToPreparatoryRace} días` : 'No hay una carrera B antes del objetivo'}</small></article>
+      </div>
+    </section>
+    <section className="runner-profile section-block" aria-labelledby="runner-profile-title"><div className="section-heading"><div><span className="section-label">Perfil de mediano plazo</span><h2 id="runner-profile-title">Perfil actual del corredor</h2></div><span className="profile-confidence">Provisional · confianza {review.runnerProfile.confidence.toLowerCase()}</span></div><p>No cambia por una sola sesión; se recalcula con el historial y al terminar cada bloque.</p><dl><div><dt>Nivel</dt><dd>{review.runnerProfile.level}</dd></div><div><dt>Perfil dominante</dt><dd>{review.runnerProfile.dominantType}</dd></div><div><dt>Consistencia</dt><dd>{review.runnerProfile.consistency}</dd></div><div><dt>Especificidad</dt><dd>{review.runnerProfile.specificity}</dd></div><div><dt>Gestión de carga</dt><dd>{review.runnerProfile.loadManagement}</dd></div><div><dt>Fortaleza actual</dt><dd>{review.runnerProfile.currentStrength}</dd></div><div><dt>Limitante actual</dt><dd>{review.runnerProfile.currentLimiter}</dd></div></dl></section>
+    <section className="coach-method section-block" aria-labelledby="coach-method-title"><div className="section-heading"><div><span className="section-label">Método {review.methodologyCode}</span><h2 id="coach-method-title">Cómo se tomó la decisión</h2></div></div><p>{review.methodology}</p><div className="coach-inputs">
+      {review.reasons.map((reason) => <span key={reason}>{reason}</span>)}
+      <span>Fase actual: <strong>{review.phase}</strong>. {review.phaseFocus}</span>
+      <span>La seguridad no se promedia: una señal roja prevalece sobre cualquier buen resultado.</span>
+    </div>{review.missingData.length > 0 && <div className="coach-missing"><strong>Falta para cerrar con confianza</strong>{review.missingData.map((item) => <span key={item}>{item}</span>)}</div>}</section>
+    <section className="coach-proposal section-block" aria-labelledby="coach-proposal-title"><div className="section-heading"><div><span className="section-label">2 · Siguiente paso evolutivo</span><h2 id="coach-proposal-title">{review.proposalTitle}</h2></div><span className="date-chip">{formatPeriod(review.nextWeek.start, review.nextWeek.end)}</span></div><div className="immediate-instruction"><span>Indicación inmediata</span><strong>{review.immediateInstruction}</strong></div><div className="coach-week-summary"><span>{review.phase}</span><strong>{review.nextWeek.plannedDistanceM == null ? 'Volumen sin definir' : `${formatRaceDistance(review.nextWeek.plannedDistanceM)} planificados`}</strong><small>{review.phaseFocus}</small></div>
+      {review.nextWeek.sessions.length === 0 ? <p className="muted-copy">El plan no tiene sesiones para la siguiente semana.</p> : <div className="coach-session-list">{review.nextWeek.sessions.map((proposal) => <article className={proposal.action} key={proposal.session.id}><div><time>{fullDate(proposal.session.scheduledDate)}</time><strong>{sessionTypeLabel(proposal.session.sessionType)}</strong><small>{sessionPrescription(proposal.session)}</small></div><span>{proposal.actionLabel}</span><p>{proposal.reason}</p>{proposal.proposedObjective && <details><summary>Ver cambio propuesto</summary><p>{proposal.proposedObjective}</p></details>}</article>)}</div>}
+    </section>
+  </>
 }
 
 function SummaryCard({ label, value, detail }: { label: string; value: string; detail: string }) { return <article className="weekly-summary-card"><span>{label}</span><strong>{value}</strong><small>{detail}</small></article> }
@@ -90,29 +127,48 @@ function MetricSection({ code, metrics }: { code: string; metrics: WeeklyMetricV
   return <section className="weekly-metric" aria-labelledby={`metric-${code}`}><header><span>{code}</span><div><h2 id={`metric-${code}`}>{metricTitles[code]}</h2><p>{metricDescription(code)}</p></div></header>{metrics.length === 0 ? <p className="muted-copy">Sin datos calculados.</p> : <div className="weekly-metric-grid">{metrics.map((metric) => <article className={metric.status === 'missing' ? 'missing' : ''} key={metric.id}><span>{dimensionLabel(metric.dimension)}</span><strong>{technicalMetricValue(metric)}</strong><small>{metric.status === 'missing' || metric.status === 'not_applicable' ? 'Sin dato registrado' : 'Calculado'}</small></article>)}</div>}</section>
 }
 
-function DecisionForm({ detail, onChanged }: { detail: WeeklyEvaluationDetailResponse; onChanged: (detail: WeeklyEvaluationDetailResponse) => Promise<void> }) {
-  const [decision, setDecision] = useState('execute_plan')
+function CoachVolumeSection({ review }: { review: CoachReview }) {
+  const values: Array<[string, string | null]> = [
+    ['Distancia planificada', review.week.plannedDistanceM == null ? null : formatRaceDistance(review.week.plannedDistanceM)],
+    ['Distancia realizada · todas las carreras', formatRaceDistance(review.week.actualDistanceM)],
+    ['Distancia realizada · cinta', review.week.treadmillDistanceM == null ? null : formatRaceDistance(review.week.treadmillDistanceM)],
+    ['Distancia realizada · exterior', review.week.outdoorDistanceM == null ? null : formatRaceDistance(review.week.outdoorDistanceM)],
+    ['Duración realizada', review.week.actualDurationSeconds == null ? null : `${round(review.week.actualDurationSeconds / 60)} min`],
+  ]
+  return <section className="weekly-metric" aria-labelledby="metric-P2"><header><span>P2</span><div><h2 id="metric-P2">Volumen de running</h2><p>Incluye actividades enlazadas y carreras realizadas fuera del plan.</p></div></header><div className="weekly-metric-grid">{values.map(([label, value]) => <article className={value == null ? 'missing' : ''} key={label}><span>{label}</span><strong>{value ?? 'Sin dato'}</strong><small>{value == null ? 'Sin dato registrado' : 'Calculado con todas las actividades'}</small></article>)}</div></section>
+}
+
+function DecisionForm({ detail, coach, plan, onChanged }: { detail: WeeklyEvaluationDetailResponse; coach: CoachReview; plan: TrainingPlanDetailResponse; onChanged: (detail: WeeklyEvaluationDetailResponse) => Promise<void> }) {
+  const [decision, setDecision] = useState(coach.recommendedDecision)
   const [notes, setNotes] = useState('')
   const adjustable = decision === 'adapt' || decision === 'reduce'
-  const sessions = detail.sessions.filter((session): session is WeeklyEvaluationSessionResponse & { plannedSessionId: string } => Boolean(session.plannedSessionId))
-  const [sourceSessionId, setSourceSessionId] = useState(sessions[0]?.plannedSessionId ?? '')
-  const sourceSession = sessions.find((session) => session.plannedSessionId === sourceSessionId) ?? sessions[0]
-  const [scheduledDate, setScheduledDate] = useState(sourceSession?.scheduledDate ?? '')
-  const [objective, setObjective] = useState(sourceSession?.objective ?? '')
-  const [rationale, setRationale] = useState('')
+  const recommendedChanges = coach.nextWeek.sessions.filter((proposal) => proposal.proposedObjective)
+  const [selectedChangeIds, setSelectedChangeIds] = useState(() => new Set(recommendedChanges.map((proposal) => proposal.session.id)))
+  const futureSessions = coach.nextWeek.sessions.map((proposal) => proposal.session)
+  const [manualSessionId, setManualSessionId] = useState(futureSessions[0]?.id ?? '')
+  const manualSession = futureSessions.find((session) => session.id === manualSessionId) ?? futureSessions[0]
+  const [manualObjective, setManualObjective] = useState(manualSession?.objective ?? '')
+  const selectedRecommendedChanges = recommendedChanges.filter((proposal) => selectedChangeIds.has(proposal.session.id))
+  const useManualChange = adjustable && recommendedChanges.length === 0
+  const sessionChanges = selectedRecommendedChanges.length > 0
+    ? selectedRecommendedChanges.map((proposal) => ({ sourcePlannedSessionId: proposal.session.id, scheduledDate: null, objective: proposal.proposedObjective }))
+    : useManualChange && manualSession ? [{ sourcePlannedSessionId: manualSession.id, scheduledDate: null, objective: manualObjective }] : []
   const confirm = useMutation({
     mutationFn: () => EvaluationsService.confirmWeeklyDecision({ evaluationId: detail.evaluation.id, requestBody: {
-      decision, observation: notes.trim(), evidence: `Resumen automático de ${detail.sessions.length} entrenamientos y sus registros asociados.`, historicalComparison: 'No se añadió una comparación histórica en este cierre.', interpretation: `${trafficTitle(detail.evaluation.trafficLight)}: ${plainRationale(detail.evaluation.rationale)}`, recommendation: recommendationForDecision(decision),
-      planAdjustment: adjustable ? { sourcePlanVersionId: detail.evaluation.planVersionId!, rationale, reviewCriterion: 'Revisar el cambio en el siguiente cierre semanal.', sessionChanges: [{ sourcePlannedSessionId: sourceSessionId, scheduledDate: scheduledDate || null, objective: objective || null }] } : null,
+      decision,
+      observation: notes.trim() || `Confirmo la propuesta del coach: ${coach.proposalTitle}.`,
+      evidence: coach.reasons.join(' '),
+      historicalComparison: coach.week.plannedDistanceM == null ? 'No existe una distancia planificada completa para comparar.' : `${formatRaceDistance(coach.week.actualDistanceM)} realizados frente a ${formatRaceDistance(coach.week.plannedDistanceM)} planificados.`,
+      interpretation: `${coach.gradeLabel}. ${coach.summary}`,
+      recommendation: `${coach.immediateInstruction} ${recommendationForDecision(decision)}`,
+      planAdjustment: adjustable ? { sourcePlanVersionId: plan.version.id, rationale: coach.summary, reviewCriterion: coach.missingData[0] ?? 'Revisar recuperación, RPE y respuesta en el siguiente cierre semanal.', sessionChanges } : null,
     } }),
     onSuccess: onChanged,
   })
-  const changeSource = (id: string) => { setSourceSessionId(id); const session = sessions.find((candidate) => candidate.plannedSessionId === id); setScheduledDate(session?.scheduledDate ?? ''); setObjective(session?.objective ?? '') }
-  const cannotAdjust = adjustable && (!detail.evaluation.planVersionId || sessions.length === 0)
-  return <section className="decision-panel" aria-labelledby="decision-title"><div><span className="section-label">Siguiente paso</span><h2 id="decision-title">Decisión para la próxima semana</h2><p>Guarda qué harás y una nota breve. Si cambias una sesión, se creará un borrador del plan para que lo revises antes de publicarlo.</p></div><form onSubmit={(event) => { event.preventDefault(); confirm.mutate() }}><label>Qué hacer<select value={decision} onChange={(event) => setDecision(event.target.value)}><option value="execute_plan">Mantener el plan</option><option value="adapt">Adaptar una sesión</option><option value="reduce">Reducir carga</option><option value="stop_and_assess">Pausar y revisar</option></select></label><NarrativeField label="Notas de la semana" value={notes} setValue={setNotes} />{adjustable && <fieldset className="adjustment-fields"><legend>Cambio en el plan</legend>{sessions.length > 0 ? <><label>Sesión a cambiar<select required value={sourceSessionId} onChange={(event) => changeSource(event.target.value)}>{sessions.map((session) => <option key={session.plannedSessionId} value={session.plannedSessionId}>{session.scheduledDate} · {sessionTypeLabel(session.sessionType)}</option>)}</select></label><label>Nueva fecha<input type="date" required value={scheduledDate} onChange={(event) => setScheduledDate(event.target.value)} /></label><label>Nuevo objetivo<textarea rows={3} required value={objective} onChange={(event) => setObjective(event.target.value)} /></label><NarrativeField label="Motivo del cambio" value={rationale} setValue={setRationale} /></> : <p className="form-alert" role="alert">Esta semana no tiene sesiones del plan que puedan modificarse.</p>}</fieldset>}{confirm.isError && <p className="form-alert" role="alert">{readableApiError(confirm.error)}</p>}<button className="button primary" disabled={confirm.isPending || cannotAdjust}>{confirm.isPending ? 'Guardando…' : 'Guardar decisión'}</button></form></section>
+  const cannotAdjust = adjustable && (!detail.evaluation.planVersionId || sessionChanges.length === 0)
+  const changeManualSession = (id: string) => { setManualSessionId(id); setManualObjective(futureSessions.find((session) => session.id === id)?.objective ?? '') }
+  return <section className="decision-panel" aria-labelledby="decision-title"><div><span className="section-label">3 · Confirmación humana</span><h2 id="decision-title">Confirmar el siguiente paso</h2><p>El coach hace la propuesta; tú conservas la decisión final. Un cambio crea un borrador y nunca modifica automáticamente el plan publicado.</p></div><form onSubmit={(event) => { event.preventDefault(); confirm.mutate() }}><label>Decisión<select value={decision} onChange={(event) => setDecision(event.target.value)}><option value="execute_plan">Seguir la progresión propuesta</option><option value="adapt">Adaptar la siguiente semana</option><option value="reduce">Reducir y consolidar</option><option value="stop_and_assess">Detener y valorar</option></select></label><p className="coach-recommendation"><span>Recomendación del coach</span><strong>{decisionLabel(coach.recommendedDecision)}</strong></p><label>Nota personal <span className="optional-label">(opcional)</span><textarea rows={2} maxLength={4000} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>{adjustable && <fieldset className="adjustment-fields"><legend>Cambios para el borrador</legend>{recommendedChanges.length > 0 ? <div className="recommended-change-list">{recommendedChanges.map((proposal) => <label key={proposal.session.id}><input type="checkbox" checked={selectedChangeIds.has(proposal.session.id)} onChange={(event) => setSelectedChangeIds((current) => { const next = new Set(current); if (event.target.checked) next.add(proposal.session.id); else next.delete(proposal.session.id); return next })} /><span><strong>{fullDate(proposal.session.scheduledDate)} · {sessionTypeLabel(proposal.session.sessionType)}</strong><small>{proposal.proposedObjective}</small></span></label>)}</div> : futureSessions.length > 0 ? <><label>Sesión a cambiar<select required value={manualSessionId} onChange={(event) => changeManualSession(event.target.value)}>{futureSessions.map((session) => <option key={session.id} value={session.id}>{session.scheduledDate} · {sessionTypeLabel(session.sessionType)}</option>)}</select></label><label>Nuevo objetivo<textarea rows={3} required value={manualObjective} onChange={(event) => setManualObjective(event.target.value)} /></label></> : <p className="form-alert" role="alert">El plan no tiene sesiones futuras que puedan modificarse.</p>}</fieldset>}{confirm.isError && <p className="form-alert" role="alert">{readableApiError(confirm.error)}</p>}<button className="button primary" disabled={confirm.isPending || cannotAdjust}>{confirm.isPending ? 'Guardando…' : adjustable ? 'Aceptar y crear borrador' : 'Confirmar siguiente paso'}</button></form></section>
 }
-
-function NarrativeField({ label, value, setValue }: { label: string; value: string; setValue: (value: string) => void }) { return <label>{label}<textarea rows={3} required maxLength={4000} value={value} onChange={(event) => setValue(event.target.value)} /></label> }
 
 function DecisionRecord({ detail }: { detail: WeeklyEvaluationDetailResponse }) {
   const decision = detail.decision!
@@ -122,7 +178,7 @@ function DecisionRecord({ detail }: { detail: WeeklyEvaluationDetailResponse }) 
 export function selectWeeklyEvaluations(evaluations: WeeklyEvaluationSummaryResponse[]) {
   const byWeek = new Map<string, WeeklyEvaluationSummaryResponse[]>()
   for (const evaluation of evaluations) { const group = byWeek.get(evaluation.weekStart) ?? []; group.push(evaluation); byWeek.set(evaluation.weekStart, group) }
-  return [...byWeek.values()].map((group) => group.find((evaluation) => evaluation.status === 'final') ?? group.find((evaluation) => evaluation.hasDecision) ?? group[0])
+  return [...byWeek.values()].map((group) => [...group].sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0])
 }
 
 export function formatMetricValue(metric: Pick<WeeklyMetricValueResponse, 'status' | 'numericValue' | 'booleanValue' | 'textValue' | 'unit' | 'dimension'>) {
@@ -178,6 +234,7 @@ function plainRationale(value: string) {
   return rationale ? `${rationale[0].toUpperCase()}${rationale.slice(1)}` : 'No hay una explicación registrada para este resultado.'
 }
 function localDate(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
+function offsetDate(value: string, days: number) { const date = parseDate(value); date.setDate(date.getDate() + days); return localDate(date) }
 function parseDate(value: string) { return new Date(`${value}T00:00:00`) }
 function formatPeriod(start: string, end: string) { return `${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(start))} – ${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(end))}` }
 function fullDate(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', month: 'short' }).format(parseDate(value)) }
@@ -185,10 +242,18 @@ function fullActualDate(value: string) { return new Intl.DateTimeFormat('es', { 
 function formatDateTime(value: string) { return new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
 function round(value: number) { return Number(value.toFixed(2)).toLocaleString('es') }
 function trafficTitle(value: string) { return ({ green: 'Semana en orden', yellow: 'Revisar antes de continuar', red: 'Pausa y revisión' } as Record<string, string>)[value] ?? value }
+function trafficLabel(value: string) { return ({ green: 'sin alertas', yellow: 'precaución', red: 'detener' } as Record<string, string>)[value] ?? value }
 function decisionLabel(value: string) { return ({ execute_plan: 'Mantener el plan', adapt: 'Adaptar una sesión', reduce: 'Reducir carga', stop_and_assess: 'Pausar y revisar' } as Record<string, string>)[value] ?? value }
 function executionLabel(value: string | null) { return value ? ({ completed_as_planned: 'Completado según plan', completed_modified: 'Completado con cambios', valid_substitution: 'Sustitución válida', not_completed: 'No realizado', optional_not_completed: 'Opcional no realizado' } as Record<string, string>)[value] ?? value : 'Sin registrar' }
 function sessionTypeLabel(value: string | null) { return value ? ({ strength_mobility_plyometrics: 'Fuerza, movilidad y pliometría', easy_run: 'Carrera fácil', long_run: 'Tirada larga', quality: 'Calidad', cross_training: 'Entrenamiento cruzado' } as Record<string, string>)[value] ?? value.replaceAll('_', ' ') : 'Sin tipo' }
 function adjustmentTypeLabel(value: string) { return ({ objective: 'Objetivo ajustado', reschedule: 'Sesión reprogramada', reschedule_and_objective: 'Fecha y objetivo ajustados' } as Record<string, string>)[value] ?? value }
+function formatRaceDistance(value: number | string) { return `${Number((Number(value) / 1000).toFixed(2)).toLocaleString('es')} km` }
+function formatClock(totalSeconds: number) { const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor(totalSeconds % 3600 / 60); const seconds = Math.round(totalSeconds % 60); return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` }
+function formatFullDate(value: string) { return new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(parseDate(value)) }
+function sessionPrescription(session: PlannedSessionResponse) {
+  const parts = [session.distanceM != null ? formatRaceDistance(session.distanceM) : null, session.durationSeconds != null ? `${round(Number(session.durationSeconds) / 60)} min` : null, session.targetRpeMin != null ? `RPE ${session.targetRpeMin}${session.targetRpeMax != null && session.targetRpeMax !== session.targetRpeMin ? `–${session.targetRpeMax}` : ''}` : null]
+  return parts.filter(Boolean).join(' · ') || session.objective
+}
 function dimensionLabel(value: string) {
   const labels: Record<string, string> = {
     'actual_distance_m:all': 'Distancia realizada · total', 'actual_distance_m:outdoor': 'Distancia realizada · exterior', 'actual_distance_m:treadmill': 'Distancia realizada · cinta',

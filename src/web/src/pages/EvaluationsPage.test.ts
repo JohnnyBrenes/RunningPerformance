@@ -7,7 +7,7 @@ describe('weekly metric presentation', () => {
     expect(previousMonday(new Date('2026-08-17T12:00:00'))).toBe('2026-08-10')
   })
 
-  it('shows one closure per week and keeps the meaningful record', () => {
+  it('shows one evaluation per week and keeps the most recent analysis', () => {
     const summary = (id: string, weekStart: string, status: string, hasDecision: boolean): WeeklyEvaluationSummaryResponse => ({
       id, weekStart, weekEnd: '2026-08-16', formatVersion: 'v1', planVersionId: null,
       cutoffAt: '2026-08-17T00:00:00Z', status, trafficLight: 'green', rationale: '',
@@ -20,7 +20,7 @@ describe('weekly metric presentation', () => {
       summary('another-week', '2026-08-03', 'provisional', false),
     ])
 
-    expect(selected.map((evaluation) => evaluation.id)).toEqual(['final', 'another-week'])
+    expect(selected.map((evaluation) => evaluation.id)).toEqual(['latest-provisional', 'another-week'])
   })
 
   it('distinguishes the actual Garmin date from the planned session date', () => {
