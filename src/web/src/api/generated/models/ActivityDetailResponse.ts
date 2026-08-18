@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ActivityPlannedContextResponse } from './ActivityPlannedContextResponse';
 import type { ActivitySourceResponse } from './ActivitySourceResponse';
 import type { ActivitySummaryResponse } from './ActivitySummaryResponse';
 export type ActivityDetailResponse = {
@@ -18,5 +19,6 @@ export type ActivityDetailResponse = {
     elevationGainM: number | string | null;
     lapCount: number | string | null;
     sources: Array<ActivitySourceResponse>;
+    plannedContext: (null | ActivityPlannedContextResponse);
 };
 

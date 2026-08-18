@@ -205,7 +205,8 @@ public static class ActivityEndpoints
                     GetNullableValue<decimal>(reader, 22),
                     GetNullableValue<decimal>(reader, 23),
                     GetNullableValue<int>(reader, 24),
-                    []);
+                    [],
+                    null);
             }
         }
 
@@ -257,8 +258,72 @@ public static class ActivityEndpoints
             }
         }
 
+        var plannedContext = await ReadPlannedContextAsync(session, id, cancellationToken);
+
         await session.CommitAsync(cancellationToken);
-        return Results.Ok(detail with { Sources = sources });
+        return Results.Ok(detail with { Sources = sources, PlannedContext = plannedContext });
+    }
+
+    private static async Task<ActivityPlannedContextResponse?> ReadPlannedContextAsync(
+        OwnerDbSession session,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = session.Connection.CreateCommand();
+        command.Transaction = session.Transaction;
+        command.CommandText = """
+            select
+              planned.id, link.id, link.status, link.method, link.confidence,
+              planned.scheduled_date, planned.session_type, planned.modality,
+              planned.obligation, planned.objective,
+              planned.distance_m, planned.duration_seconds,
+              planned.target_rpe_min, planned.target_rpe_max, planned.terrain,
+              version.status, outcome.execution_status,
+              coalesce(load.activity_count, 0), load.distance_m,
+              load.duration_seconds, load.session_rpe, load.srpe_load
+            from app.activity_session_links link
+            join app.planned_sessions planned
+              on planned.owner_id = link.owner_id
+             and planned.id = link.planned_session_id
+            join app.training_plan_versions version
+              on version.owner_id = planned.owner_id
+             and version.id = planned.training_plan_version_id
+            left join app.planned_session_outcomes outcome
+              on outcome.owner_id = planned.owner_id
+             and outcome.planned_session_id = planned.id
+            left join app.v_logical_session_srpe load
+              on load.owner_id = planned.owner_id
+             and load.planned_session_id = planned.id
+            where link.activity_id = @activity_id
+              and link.status in ('proposed', 'confirmed');
+            """;
+        command.Parameters.AddWithValue("activity_id", activityId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken)
+            ? new(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                GetNullableValue<decimal>(reader, 4),
+                reader.GetFieldValue<DateOnly>(5),
+                reader.GetString(6),
+                GetNullableString(reader, 7),
+                reader.GetString(8),
+                reader.GetString(9),
+                GetNullableValue<decimal>(reader, 10),
+                GetNullableValue<decimal>(reader, 11),
+                GetNullableValue<decimal>(reader, 12),
+                GetNullableValue<decimal>(reader, 13),
+                GetNullableString(reader, 14),
+                reader.GetString(15),
+                GetNullableString(reader, 16),
+                reader.GetInt32(17),
+                GetNullableValue<decimal>(reader, 18),
+                GetNullableValue<decimal>(reader, 19),
+                GetNullableValue<decimal>(reader, 20),
+                GetNullableValue<decimal>(reader, 21))
+            : null;
     }
 
     private static ActivitySummaryResponse ReadSummary(NpgsqlDataReader reader) => new(
@@ -333,6 +398,30 @@ public sealed record ActivitySourceResponse(
     string? Sha256,
     Guid? IngestionRunId);
 
+public sealed record ActivityPlannedContextResponse(
+    Guid PlannedSessionId,
+    Guid LinkId,
+    string LinkStatus,
+    string LinkMethod,
+    decimal? LinkConfidence,
+    DateOnly ScheduledDate,
+    string SessionType,
+    string? Modality,
+    string Obligation,
+    string Objective,
+    decimal? PlannedDistanceM,
+    decimal? PlannedDurationSeconds,
+    decimal? TargetRpeMin,
+    decimal? TargetRpeMax,
+    string? Terrain,
+    string PlanVersionStatus,
+    string? ExecutionStatus,
+    int LogicalActivityCount,
+    decimal? LogicalDistanceM,
+    decimal? LogicalDurationSeconds,
+    decimal? SessionRpe,
+    decimal? SrpeLoad);
+
 public sealed record ActivityDetailResponse(
     ActivitySummaryResponse Activity,
     DateTime? StartedAtUtc,
@@ -346,4 +435,5 @@ public sealed record ActivityDetailResponse(
     decimal? AveragePowerW,
     decimal? ElevationGainM,
     int? LapCount,
-    IReadOnlyList<ActivitySourceResponse> Sources);
+    IReadOnlyList<ActivitySourceResponse> Sources,
+    ActivityPlannedContextResponse? PlannedContext);
