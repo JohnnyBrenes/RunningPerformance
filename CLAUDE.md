@@ -97,7 +97,13 @@ Ambos extremos son **artefactos generados y versionados**. `dotnet build` reescr
 
 **Para agregar un campo a una respuesta de API:** modifica el `record` en el archivo de endpoints C# → `dotnet build` → `npm --prefix src/web run lint` → consúmelo desde React.
 
-Nota de ruido: en Windows el generador escribe CRLF y `.gitattributes` pide LF, así que tras `lint`/`build` los archivos de `api/generated/` aparecen como modificados en `git status` aunque `git diff --numstat` salga vacío. Es cosmético; git normaliza al commitear.
+**Ruido de fin de línea tras generar.** `.gitattributes` declara `* text=auto eol=lf`, así que git escribe LF al hacer checkout, pero el generador de TypeScript escribe CRLF en Windows. Tras `lint`/`build`, `git status` marca como modificados ~96 archivos de `api/generated/` mientras `git diff --numstat` sale vacío: el hash normalizado coincide con el del índice, así que el contenido es idéntico y nunca puede colarse en un commit. `git update-index --refresh` no lo limpia, porque la comparación es contra lo que el checkout produciría. Para dejar el árbol limpio:
+
+```bash
+git checkout -- src/web/src/api/generated
+```
+
+Hazlo solo cuando `git diff --numstat` confirme que no hay cambios de contenido reales; si generaste un tipo nuevo, commitéalo antes (es un artefacto versionado, ver arriba).
 
 ### Backend
 
