@@ -2037,7 +2037,8 @@
           "averagePowerW",
           "elevationGainM",
           "lapCount",
-          "sources"
+          "sources",
+          "plannedContext"
         ],
         "type": "object",
         "properties": {
@@ -2143,6 +2144,16 @@
             "items": {
               "$ref": "#/components/schemas/ActivitySourceResponse"
             }
+          },
+          "plannedContext": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActivityPlannedContextResponse"
+              }
+            ]
           }
         }
       },
@@ -2184,6 +2195,172 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ActivityPlannedContextResponse": {
+        "required": [
+          "plannedSessionId",
+          "linkId",
+          "linkStatus",
+          "linkMethod",
+          "linkConfidence",
+          "scheduledDate",
+          "sessionType",
+          "modality",
+          "obligation",
+          "objective",
+          "plannedDistanceM",
+          "plannedDurationSeconds",
+          "targetRpeMin",
+          "targetRpeMax",
+          "terrain",
+          "planVersionStatus",
+          "executionStatus",
+          "logicalActivityCount",
+          "logicalDistanceM",
+          "logicalDurationSeconds",
+          "sessionRpe",
+          "srpeLoad"
+        ],
+        "type": "object",
+        "properties": {
+          "plannedSessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "linkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "linkStatus": {
+            "type": "string"
+          },
+          "linkMethod": {
+            "type": "string"
+          },
+          "linkConfidence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "scheduledDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sessionType": {
+            "type": "string"
+          },
+          "modality": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "obligation": {
+            "type": "string"
+          },
+          "objective": {
+            "type": "string"
+          },
+          "plannedDistanceM": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "plannedDurationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "targetRpeMin": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "targetRpeMax": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "terrain": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "planVersionStatus": {
+            "type": "string"
+          },
+          "executionStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logicalActivityCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "logicalDistanceM": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "logicalDurationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sessionRpe": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "srpeLoad": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
