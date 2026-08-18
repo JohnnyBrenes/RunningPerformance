@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ActivitiesService, IngestionService } from '../api/generated'
+import type { ActivityDetailResponse } from '../api/generated'
 import { ErrorState, LoadingState } from '../components/States'
 import { readableApiError } from '../lib/api'
 import { formatPace } from '../lib/dashboard'
+import { buildPlannedComparison } from '../lib/plannedComparison'
+import type { PlannedComparisonRow, RpeStatus } from '../lib/plannedComparison'
 
 type Period = 'all' | 'month' | 'quarter' | 'semester' | 'year' | 'custom'
 
@@ -142,6 +145,7 @@ export function ActivitiesPage() {
         <div className="card-top"><div><span className="section-label">Detalle de actividad</span><h2 id="activity-detail-heading">{selected.data.activity.title ?? selected.data.activity.activityType}</h2></div><button type="button" onClick={() => setParams({})}>Cerrar</button></div>
         <p>{new Date(selected.data.activity.startedAtLocal).toLocaleString('es')} · {selected.data.activity.modality ?? 'modalidad ND'}</p>
         <div className="metric-row compact-metrics"><div><span>Distancia</span><strong>{distance(selected.data.activity.distanceM)}</strong></div><div><span>Duración</span><strong>{duration(selected.data.activity.durationSeconds)}</strong></div><div><span>Ritmo</span><strong>{formatPace(selected.data.activity.averagePaceSecondsPerKm)}</strong></div><div><span>FC media</span><strong>{selected.data.activity.averageHeartRateBpm ?? 'ND'}</strong></div></div>
+        <PlannedComparison detail={selected.data} />
         <details><summary>Origen de los datos</summary><ul>{selected.data.sources.map((source, index) => <li key={`${source.id}-${index}`}>{source.sourceClass} · {source.originalName ?? 'archivo ND'} · fila {source.sourceRowNumber ?? 'ND'}</li>)}</ul></details>
       </> : null}
     </section>}
@@ -154,4 +158,49 @@ export function ActivitiesPage() {
       </>}
     </section>
   </div>
+}
+
+function PlannedComparison({ detail }: { detail: ActivityDetailResponse }) {
+  const context = detail.plannedContext
+  const comparison = useMemo(
+    () => context == null ? null : buildPlannedComparison(detail.activity, context),
+    [detail.activity, context],
+  )
+  if (context == null || comparison == null) return null
+
+  return <section className="planned-comparison" aria-labelledby="planned-comparison-heading">
+    <div className="card-top"><div><span className="section-label">Comparación con el plan</span><h3 id="planned-comparison-heading">{plannedDate(context.scheduledDate)}</h3></div>{context.linkStatus === 'proposed' && <span className="planned-flag">Vínculo propuesto</span>}</div>
+    <p className="planned-objective">{context.objective}</p>
+    <dl>{comparison.rows.map((row) => <ComparisonRow key={row.metric} row={row} />)}</dl>
+    {comparison.activityCount > 1 && <small>Esta sesión reúne {comparison.activityCount} actividades; la comparación usa el total de la sesión, no solo esta actividad.</small>}
+    {comparison.rows.some((row) => row.plannedIsDerived) && <small>El ritmo del plan es el que resulta de su distancia y duración; el plan no prescribe un ritmo.</small>}
+    {context.executionStatus != null && <small>Resultado registrado: {executionLabels[context.executionStatus] ?? context.executionStatus}.</small>}
+  </section>
+}
+
+function ComparisonRow({ row }: { row: PlannedComparisonRow }) {
+  return <div>
+    <dt>{row.label}</dt>
+    <dd><strong>{row.actual}</strong><span>plan {row.planned}</span>{row.fulfilmentPercent != null && <em>{row.fulfilmentPercent}% de lo planeado</em>}{row.rpeStatus != null && <em>{rpeStatusLabels[row.rpeStatus]}</em>}</dd>
+  </div>
+}
+
+const rpeStatusLabels: Record<RpeStatus, string> = {
+  below: 'por debajo del rango',
+  within: 'dentro del rango',
+  above: 'por encima del rango',
+}
+
+const executionLabels: Record<string, string> = {
+  completed_as_planned: 'completada según el plan',
+  completed_modified: 'completada con modificaciones',
+  valid_substitution: 'sustitución válida',
+  not_completed: 'no realizada',
+  optional_not_completed: 'opcional no realizada',
+}
+
+function plannedDate(value: string): string {
+  const formatted = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' })
+    .format(new Date(`${value}T12:00:00`))
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }

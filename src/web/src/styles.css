@@ -552,6 +552,19 @@ input:focus, select:focus, textarea:focus { border-color: var(--forest-soft); ba
 .activity-result-count { margin-bottom: 0; color: var(--muted); font-size: .78rem; }
 .activity-detail .card-top button, .activity-table button, .pagination button { min-height: 42px; border: 0; border-radius: .55rem; background: white; color: var(--forest); padding: .45rem .7rem; font-weight: 800; cursor: pointer; }
 .activity-detail details { margin-top: 1rem; }
+.planned-comparison { margin-top: 1.25rem; border-top: 1px solid rgba(255,255,255,.14); padding-top: 1rem; }
+.planned-comparison .card-top { align-items: start; gap: .6rem; }
+.planned-comparison h3 { margin: .3rem 0 0; font-family: Georgia, serif; font-size: 1.15rem; font-weight: 400; }
+.planned-flag { flex-shrink: 0; border-radius: 999px; background: rgba(255,255,255,.16); padding: .3rem .55rem; font-size: .58rem; font-weight: 850; text-transform: uppercase; }
+.planned-objective { margin: .55rem 0 .9rem; color: #cfe3da; font-size: .76rem; line-height: 1.5; }
+.planned-comparison dl { display: grid; margin: 0; }
+.planned-comparison dl > div { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: baseline; gap: .5rem; border-top: 1px solid rgba(255,255,255,.1); padding: .6rem 0; }
+.planned-comparison dt { color: #9db9b0; font-size: .62rem; font-weight: 850; text-transform: uppercase; }
+.planned-comparison dd { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-end; gap: .45rem; margin: 0; }
+.planned-comparison dd strong { font-size: .9rem; font-weight: 800; }
+.planned-comparison dd span { color: #9db9b0; font-size: .72rem; }
+.planned-comparison dd em { border-radius: 999px; background: rgba(255,255,255,.14); padding: .2rem .5rem; font-size: .6rem; font-style: normal; font-weight: 800; }
+.planned-comparison small { display: block; margin-top: .7rem; color: #9db9b0; font-size: .66rem; line-height: 1.5; }
 .activity-table { min-width: 850px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; }
 .pagination button:disabled { color: #aeb3aa; cursor: default; }
