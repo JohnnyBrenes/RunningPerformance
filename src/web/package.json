@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "generate:api": "openapi --input ./openapi/running-performance.json --output ./src/api/generated --client fetch --useOptions --useUnionTypes",
+    "generate:api": "openapi --input ./openapi/running-performance.json --output ./src/api/generated --client fetch --useOptions --useUnionTypes && node scripts/normalize-generated-eol.mjs",
     "build": "npm run generate:api && tsc -b && vite build",
     "lint": "npm run generate:api && tsc -b --pretty false",
     "test": "vitest run src",
