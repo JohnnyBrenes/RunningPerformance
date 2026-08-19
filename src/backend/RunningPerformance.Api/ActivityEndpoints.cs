@@ -214,6 +214,7 @@ public static class ActivityEndpoints
                     GetNullableValue<int>(reader, 24),
                     [],
                     null,
+                    null,
                     null);
             }
         }
@@ -268,6 +269,7 @@ public static class ActivityEndpoints
 
         var plannedContext = await ReadPlannedContextAsync(session, id, cancellationToken);
         var recentComparison = await ReadRecentComparisonAsync(session, id, cancellationToken);
+        var signals = await ReadSessionSignalsAsync(session, id, cancellationToken);
 
         await session.CommitAsync(cancellationToken);
         return Results.Ok(detail with
@@ -275,7 +277,60 @@ public static class ActivityEndpoints
             Sources = sources,
             PlannedContext = plannedContext,
             RecentComparison = recentComparison,
+            SessionSignals = signals,
         });
+    }
+
+    /// <summary>
+    /// Aggregates the check-in answers of the session this activity belongs to,
+    /// keeping the worst of each across the immediate, 24h and 48h windows — the
+    /// same aggregation the weekly evaluation applies in 0150. Returns null when
+    /// nothing was recorded, so silence is never read as an all-clear.
+    /// </summary>
+    private static async Task<ActivitySessionSignalsResponse?> ReadSessionSignalsAsync(
+        OwnerDbSession session,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = session.Connection.CreateCommand();
+        command.Transaction = session.Transaction;
+        command.CommandText = """
+            select
+              count(*)::int,
+              max(checkin.pain),
+              max(checkin.fatigue),
+              min(checkin.sleep_quality),
+              min(checkin.perceived_recovery),
+              bool_or(checkin.gait_changed),
+              bool_or(checkin.has_illness_or_symptom),
+              case max(case checkin.recovery_response
+                  when 'adverse' then 3 when 'incomplete' then 2 when 'normal' then 1 end)
+                when 3 then 'adverse' when 2 then 'incomplete' when 1 then 'normal' end,
+              (array_agg(checkin.pain_location)
+                 filter (where checkin.pain_location is not null))[1]
+            from app.session_checkins checkin
+            where checkin.planned_session_id = (
+              select link.planned_session_id
+              from app.activity_session_links link
+              where link.activity_id = @activity_id
+                and link.status in ('proposed', 'confirmed'));
+            """;
+        command.Parameters.AddWithValue("activity_id", activityId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken) || reader.GetInt32(0) == 0)
+        {
+            return null;
+        }
+
+        return new(
+            GetNullableValue<decimal>(reader, 1),
+            GetNullableValue<decimal>(reader, 2),
+            GetNullableValue<decimal>(reader, 3),
+            GetNullableValue<decimal>(reader, 4),
+            GetNullableValue<bool>(reader, 5),
+            GetNullableValue<bool>(reader, 6),
+            GetNullableString(reader, 7),
+            GetNullableString(reader, 8));
     }
 
     /// <summary>
@@ -502,6 +557,16 @@ public sealed record ActivityPlannedContextResponse(
     decimal? SessionRpe,
     decimal? SrpeLoad);
 
+public sealed record ActivitySessionSignalsResponse(
+    decimal? Pain,
+    decimal? Fatigue,
+    decimal? SleepQuality,
+    decimal? PerceivedRecovery,
+    bool? GaitChanged,
+    bool? HasIllnessOrSymptom,
+    string? RecoveryResponse,
+    string? PainLocation);
+
 public sealed record ActivityRecentComparisonResponse(
     int WindowDays,
     int SampleSize,
@@ -525,4 +590,5 @@ public sealed record ActivityDetailResponse(
     int? LapCount,
     IReadOnlyList<ActivitySourceResponse> Sources,
     ActivityPlannedContextResponse? PlannedContext,
-    ActivityRecentComparisonResponse? RecentComparison);
+    ActivityRecentComparisonResponse? RecentComparison,
+    ActivitySessionSignalsResponse? SessionSignals);

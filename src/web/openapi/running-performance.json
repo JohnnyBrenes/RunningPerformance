@@ -2039,7 +2039,8 @@
           "lapCount",
           "sources",
           "plannedContext",
-          "recentComparison"
+          "recentComparison",
+          "sessionSignals"
         ],
         "type": "object",
         "properties": {
@@ -2163,6 +2164,16 @@
               },
               {
                 "$ref": "#/components/schemas/ActivityRecentComparisonResponse"
+              }
+            ]
+          },
+          "sessionSignals": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActivitySessionSignalsResponse"
               }
             ]
           }
@@ -2488,6 +2499,81 @@
           },
           "rationale": {
             "type": "string"
+          }
+        }
+      },
+      "ActivitySessionSignalsResponse": {
+        "required": [
+          "pain",
+          "fatigue",
+          "sleepQuality",
+          "perceivedRecovery",
+          "gaitChanged",
+          "hasIllnessOrSymptom",
+          "recoveryResponse",
+          "painLocation"
+        ],
+        "type": "object",
+        "properties": {
+          "pain": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "fatigue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sleepQuality": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "perceivedRecovery": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "gaitChanged": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "hasIllnessOrSymptom": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "recoveryResponse": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "painLocation": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

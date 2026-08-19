@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { ActivityPlannedContextResponse } from './ActivityPlannedContextResponse';
 import type { ActivityRecentComparisonResponse } from './ActivityRecentComparisonResponse';
+import type { ActivitySessionSignalsResponse } from './ActivitySessionSignalsResponse';
 import type { ActivitySourceResponse } from './ActivitySourceResponse';
 import type { ActivitySummaryResponse } from './ActivitySummaryResponse';
 export type ActivityDetailResponse = {
@@ -22,5 +23,6 @@ export type ActivityDetailResponse = {
     sources: Array<ActivitySourceResponse>;
     plannedContext: (null | ActivityPlannedContextResponse);
     recentComparison: (null | ActivityRecentComparisonResponse);
+    sessionSignals: (null | ActivitySessionSignalsResponse);
 };
 
