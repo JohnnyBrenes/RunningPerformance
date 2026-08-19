@@ -5,11 +5,13 @@ import { ActivitiesService, IngestionService } from '../api/generated'
 import type { ActivityDetailResponse } from '../api/generated'
 import { ErrorState, LoadingState } from '../components/States'
 import { readableApiError } from '../lib/api'
+import { describeSource } from '../lib/dataOrigin'
 import { formatPace } from '../lib/dashboard'
 import { buildPlannedComparison } from '../lib/plannedComparison'
 import type { PlannedComparisonRow, RpeStatus } from '../lib/plannedComparison'
 import { buildRecentComparison } from '../lib/recentComparison'
 import type { PaceTrend, RecentComparisonRow } from '../lib/recentComparison'
+import { buildSessionSummary } from '../lib/sessionSummary'
 
 type Period = 'all' | 'month' | 'quarter' | 'semester' | 'year' | 'custom'
 
@@ -147,9 +149,10 @@ export function ActivitiesPage() {
         <div className="card-top"><div><span className="section-label">Detalle de actividad</span><h2 id="activity-detail-heading">{selected.data.activity.title ?? selected.data.activity.activityType}</h2></div><button type="button" onClick={() => setParams({})}>Cerrar</button></div>
         <p>{new Date(selected.data.activity.startedAtLocal).toLocaleString('es')} · {selected.data.activity.modality ?? 'modalidad ND'}</p>
         <div className="metric-row compact-metrics"><div><span>Distancia</span><strong>{distance(selected.data.activity.distanceM)}</strong></div><div><span>Duración</span><strong>{duration(selected.data.activity.durationSeconds)}</strong></div><div><span>Ritmo</span><strong>{formatPace(selected.data.activity.averagePaceSecondsPerKm)}</strong></div><div><span>FC media</span><strong>{selected.data.activity.averageHeartRateBpm ?? 'ND'}</strong></div></div>
+        <SessionSummary detail={selected.data} />
         <PlannedComparison detail={selected.data} />
         <RecentComparison detail={selected.data} />
-        <details><summary>Origen de los datos</summary><ul>{selected.data.sources.map((source, index) => <li key={`${source.id}-${index}`}>{source.sourceClass} · {source.originalName ?? 'archivo ND'} · fila {source.sourceRowNumber ?? 'ND'}</li>)}</ul></details>
+        {selected.data.sources.length > 0 && <p className="data-origin">De dónde salen estos datos: {selected.data.sources.map(describeSource).join(' + ')}.</p>}
       </> : null}
     </section>}
 
@@ -235,4 +238,23 @@ const paceTrendLabels: Record<PaceTrend, string> = {
   faster: 'más rápido que lo habitual',
   similar: 'como lo habitual',
   slower: 'más lento que lo habitual',
+}
+
+function SessionSummary({ detail }: { detail: ActivityDetailResponse }) {
+  const summary = useMemo(() => {
+    const planned = detail.plannedContext == null
+      ? null
+      : buildPlannedComparison(detail.activity, detail.plannedContext)
+    const recent = detail.recentComparison == null
+      ? null
+      : buildRecentComparison(detail.activity, detail.recentComparison)
+    return buildSessionSummary(detail.sessionSignals, planned, recent)
+  }, [detail])
+  if (summary == null) return null
+
+  return <section className={`session-summary${summary.level == null ? '' : ` level-${summary.level}`}`} aria-labelledby="session-summary-heading">
+    <span className="section-label">En resumen</span>
+    <p id="session-summary-heading" className="session-headline">{summary.headline}</p>
+    {summary.points.length > 0 && <ul>{summary.points.map((point) => <li key={point}>{point}</li>)}</ul>}
+  </section>
 }
