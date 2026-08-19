@@ -99,6 +99,72 @@
       "setup": "Siéntate frente a la polea baja con los pies apoyados en la plataforma y las rodillas ligeramente dobladas, nunca bloqueadas. Toma el agarre y siéntate erguido, con el pecho alto y los brazos estirados sintiendo un estiramiento en la espalda. El peso correcto es el que te deja 15 repeticiones limpias sin necesidad de mecerte.",
       "execution": "Junta primero los omóplatos, como si sostuvieras algo entre ellos, y después lleva el agarre hacia las costillas bajas con los codos rozando el cuerpo. Estira los brazos despacio, dejando que la espalda se alargue, sin perder la postura del tronco.",
       "safetyCues": "El tronco se mantiene quieto: si te vas hacia atrás para tirar, o redondeas la espalda al volver, reduce la carga. Los hombros no suben hacia las orejas."
+    },
+    {
+      "slug": "practica-aterrizaje",
+      "canonicalName": "Práctica de aterrizaje",
+      "movementPattern": "plyometric",
+      "equipment": "Un escalón o step bajo",
+      "displayName": "Práctica de aterrizaje",
+      "briefDescription": "Enseña a frenar el impacto: es el ejercicio que prepara las piernas para saltar, y el primero de toda progresión de pliometría.",
+      "setup": "Ponte de pie sobre un escalón bajo, de unos 20 a 30 centímetros, con los pies al ancho de la cadera. Necesitas espacio libre delante y una superficie firme donde caer.",
+      "execution": "Déjate caer del escalón (no saltes hacia arriba) y aterriza con los dos pies a la vez, doblando tobillos, rodillas y cadera para amortiguar. Quédate quieto dos segundos en la posición de aterrizaje antes de volver a subir. El objetivo es caer sin ruido y sin que las rodillas se vayan hacia adentro.",
+      "safetyCues": "Cada caída cuenta como un contacto: respeta el número que indique la sesión, aunque te sientas bien. Si aterrizas con ruido, pierdes el equilibrio o las rodillas se juntan, baja la altura del escalón o corta la serie."
+    },
+    {
+      "slug": "salto-sentadilla",
+      "canonicalName": "Salto de sentadilla submáximo",
+      "movementPattern": "plyometric",
+      "equipment": "Peso corporal",
+      "displayName": "Salto de sentadilla submáximo",
+      "briefDescription": "Salto vertical suave que entrena la elasticidad de las piernas sin el impacto de un salto máximo.",
+      "setup": "De pie, pies al ancho de la cadera, en una superficie firme y con espacio libre arriba. «Submáximo» significa saltar a media potencia, más o menos la mitad de lo que podrías: no es una prueba de altura.",
+      "execution": "Baja a una sentadilla poco profunda, salta hacia arriba con los brazos acompañando y aterriza en el mismo sitio, doblando las rodillas para amortiguar. Encadena la siguiente repetición sin pausa larga, pero sin rebotar de golpe.",
+      "safetyCues": "Si el aterrizaje suena fuerte, si las rodillas se van hacia adentro o si empiezas a caer descompensado, para la serie: la técnica se degrada antes que la fuerza. Sáltalo si ese día tienes molestia en rodilla, tobillo o tendón."
+    },
+    {
+      "slug": "salto-lateral-linea",
+      "canonicalName": "Salto lateral bajo sobre línea",
+      "movementPattern": "plyometric",
+      "equipment": "Una línea en el suelo o una cinta",
+      "displayName": "Salto lateral bajo sobre línea",
+      "briefDescription": "Añade el movimiento de lado a lado, que la carrera casi no entrena y que es donde el tobillo suele fallar.",
+      "setup": "Marca una línea en el suelo con cinta o usa una junta del piso. Colócate a un lado, con los pies juntos y las rodillas algo flexionadas.",
+      "execution": "Salta de lado a lado sobre la línea con los dos pies a la vez, rebotando rápido y bajo, como si el suelo quemara. Mantén el pecho alto y aterriza sobre la parte delantera del pie. Ida y vuelta cuentan como dos contactos.",
+      "safetyCues": "Son saltos bajos y rápidos, no largos: si necesitas saltar alto para cruzar, acerca los pies a la línea. Corta la serie cuando pierdas el ritmo o el aterrizaje deje de ser silencioso."
+    },
+    {
+      "slug": "curl-femoral-descenso-lento",
+      "canonicalName": "Curl femoral con descenso lento",
+      "movementPattern": "knee_flexion",
+      "equipment": "Máquina de curl femoral",
+      "displayName": "Curl femoral con descenso lento",
+      "briefDescription": "Fortalece la parte de atrás del muslo, el músculo que más se lesiona corriendo, insistiendo en la fase de frenado.",
+      "setup": "Ajusta la máquina para que el rodillo quede justo encima del talón y la rodilla coincida con el eje de giro. Elige un peso que puedas subir sin tirones y, sobre todo, bajar despacio: si no puedes controlar la bajada, es demasiado.",
+      "execution": "Dobla las rodillas llevando los talones hacia los glúteos en un segundo, y luego baja contando **tres segundos**, resistiendo todo el recorrido. Esa bajada lenta es el ejercicio; subir es solo llegar a la posición.",
+      "safetyCues": "La cadera no se despega del apoyo para ayudarte a subir. Si notas un tirón agudo detrás del muslo, para de inmediato: esa zona avisa antes de lesionarse."
+    },
+    {
+      "slug": "elevacion-pantorrilla-unilateral",
+      "canonicalName": "Elevación de pantorrilla a una pierna",
+      "movementPattern": "calf",
+      "equipment": "Un escalón y algo donde apoyar la mano",
+      "displayName": "Elevación de pantorrilla a una pierna",
+      "briefDescription": "Fortalece pantorrilla y tendón de Aquiles, que absorben el impacto en cada zancada; a una pierna, porque así es como corres.",
+      "setup": "Ponte con la punta de un pie en el borde de un escalón, con el talón en el aire, y apoya una mano en la pared o una barra solo para el equilibrio, sin cargar peso en ella. La otra pierna queda recogida.",
+      "execution": "Sube el talón lo más alto que puedas sobre la punta del pie, aguanta un segundo arriba y baja despacio hasta sentir el estiramiento por debajo de la pantorrilla. Haz todas las repeticiones de un lado y cambia. Para trabajar el sóleo, repite el mismo movimiento con la rodilla algo flexionada.",
+      "safetyCues": "Sube y baja sin rebotar. Si el tendón de Aquiles molesta al bajar, reduce el recorrido y hazlo con los dos pies hasta que la molestia desaparezca."
+    },
+    {
+      "slug": "caminata-lateral-banda",
+      "canonicalName": "Caminata lateral con banda",
+      "movementPattern": "hip_stability",
+      "equipment": "Banda elástica corta",
+      "displayName": "Caminata lateral con banda",
+      "briefDescription": "Activa el glúteo medio, que es el que evita que la cadera se caiga hacia un lado en cada apoyo de la carrera.",
+      "setup": "Coloca una banda elástica alrededor de las piernas, por encima de las rodillas si es tu primera vez, o en los tobillos si buscas más dificultad. Separa los pies hasta sentir tensión, flexiona un poco rodillas y cadera y mantén el pecho alto.",
+      "execution": "Da pasos hacia un lado manteniendo la tensión de la banda, sin juntar del todo los pies entre paso y paso. Los pies apuntan al frente todo el tiempo. Haz las repeticiones hacia un lado y luego regresa hacia el otro.",
+      "safetyCues": "El tronco no se inclina para acompañar el paso: si se balancea, usa una banda más suave. Lo debes sentir a un lado de la cadera, no en la parte baja de la espalda."
     }
   ]
 }

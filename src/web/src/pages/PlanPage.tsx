@@ -6,7 +6,8 @@ import { EmptyState, ErrorState, LoadingState } from '../components/States'
 import { SessionCompletionPanel } from '../components/SessionCompletionPanel'
 import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import { selectExerciseMedia } from '../lib/exerciseMedia'
-import { plannedDosage } from '../lib/plannedDosage'
+import { plannedDosage, plannedRest } from '../lib/plannedDosage'
+import { blocksSummary, buildSessionSteps } from '../lib/sessionSteps'
 
 export function PlanPage() {
   const queryClient = useQueryClient()
@@ -163,9 +164,11 @@ export function PlanPage() {
 }
 
 function SessionGuide({ detail, session, sex, edit }: { detail: TrainingPlanDetailResponse; session: PlannedSessionResponse; sex: string; edit?: () => void }) {
-  // Con bloques estructurados, mainSet deja de ser el plan del día y pasa a
-  // presentarlos como resumen corto: mostrar ambos por separado repetiría lo mismo.
-  const hasBlocks = session.blocks.length > 0
+  // El día se lee como una secuencia: calentamiento, cada bloque en su orden,
+  // recuperaciones y vuelta a la calma. Con bloques, mainSet deja de ser un paso
+  // y pasa a encabezarlos como resumen corto.
+  const steps = buildSessionSteps(session)
+  const summary = blocksSummary(session)
   return (
     <section className="session-guide" aria-labelledby="session-title">
       <header className="session-hero">
@@ -173,14 +176,20 @@ function SessionGuide({ detail, session, sex, edit }: { detail: TrainingPlanDeta
         <div className="session-metrics"><span><small>Duración</small><strong>{minutes(session.durationSeconds)}</strong></span><span><small>Esfuerzo</small><strong>{rpe(session.targetRpeMin, session.targetRpeMax)}</strong></span>{edit && <button className="button secondary" type="button" onClick={edit}>Ajustar sesión</button>}<small className="rpe-help">RPE: percepción del esfuerzo, de 1 (muy fácil) a 10 (máximo).</small></div>
       </header>
 
-      <div className="session-overview">
-        <InfoStep label="Calentamiento" value={session.warmup} />
-        {!hasBlocks && <InfoStep label="Bloque principal" value={session.mainSet} />}
-        <InfoStep label="Recuperaciones" value={session.recoveries} />
-        <InfoStep label="Vuelta a la calma" value={session.cooldown} />
-      </div>
+      {summary && <p className="session-summary">{summary}</p>}
 
-      {hasBlocks && <div className="plan-blocks"><div className="plan-blocks-intro"><span className="section-label">Bloque principal</span><p>{session.mainSet ?? 'Cada ejercicio trae su dosificación, su técnica y sus puntos de seguridad.'}</p></div>{session.blocks.map((block) => <article className="plan-block" key={block.id}><header><span className="block-index">{String(block.position).padStart(2, '0')}</span><div><span className="section-label">{blockTypeLabel(block.blockType)} · {Number(block.repeatCount) > 1 ? `${block.repeatCount} vueltas` : '1 vuelta'}</span><p>{block.instructions}</p></div></header><div className="planned-exercises">{block.exercises.map((planned) => <PlannedExercise key={planned.id} planned={planned} sex={sex} />)}</div></article>)}</div>}
+      <ol className="session-steps">
+        {steps.map((step, index) => (
+          <li className="session-step" key={step.key}>
+            <span className="step-index">{index + 1}</span>
+            <div>
+              <span className="section-label">{step.label}</span>
+              {step.detail && <p>{step.detail}</p>}
+              {step.block && <div className="planned-exercises">{step.block.exercises.map((planned) => <PlannedExercise key={planned.id} planned={planned} sex={sex} />)}</div>}
+            </div>
+          </li>
+        ))}
+      </ol>
 
       <footer className="immutable-note"><strong>Referencia estable</strong><span>Esta guía pertenece a {detail.name}, versión {detail.version.versionNumber}. {detail.version.status === 'draft' ? 'Aún puede ajustarse antes de publicar.' : 'Su contenido publicado no puede editarse.'}</span></footer>
     </section>
@@ -192,14 +201,9 @@ function PlannedExercise({ planned, sex }: { planned: PlannedExerciseResponse; s
   return (
     <article className="planned-exercise">
       <div className="planned-visual">{media ? <img src={media.assetUri} alt={media.altText} width={media.widthPx} height={media.heightPx} loading="lazy" /> : <span aria-hidden="true">{planned.exercise.revision.displayName.charAt(0)}</span>}</div>
-      <div><div className="exercise-meta"><span>{plannedDosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span></div><h3>{planned.exercise.revision.displayName}</h3><p className="exercise-brief">{planned.exercise.revision.briefDescription}</p><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
+      <div><div className="exercise-meta"><span>{plannedDosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span>{plannedRest(planned) && <span>{plannedRest(planned)}</span>}</div><h3><span className="exercise-index">{planned.position}</span>{planned.exercise.revision.displayName}</h3><p className="exercise-brief">{planned.exercise.revision.briefDescription}</p><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
     </article>
   )
-}
-
-function InfoStep({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null
-  return <div><span>{label}</span><p>{value}</p></div>
 }
 
 function minutes(value: number | string | null) {
@@ -225,5 +229,4 @@ function dayNumber(value: string) { return parseDate(value).getDate() }
 function fullDate(value: string) { return new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' }).format(parseDate(value)) }
 function formatPeriod(start: string, end: string) { return `${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(start))} – ${new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(parseDate(end))}` }
 function versionStatusLabel(value: string) { return ({ published: 'Publicada', draft: 'Borrador', superseded: 'Sustituida', archived: 'Archivada' } as Record<string, string>)[value] ?? value }
-function blockTypeLabel(value: string) { return ({ warmup: 'Calentamiento', main: 'Principal', cooldown: 'Vuelta a la calma', circuit: 'Circuito', mobility: 'Movilidad' } as Record<string, string>)[value] ?? value }
 function sessionTypeLabel(value: string) { return ({ strength_mobility_plyometrics: 'Fuerza, movilidad y pliometría', easy_run: 'Carrera fácil', long_run: 'Carrera larga' } as Record<string, string>)[value] ?? value.replaceAll('_', ' ') }

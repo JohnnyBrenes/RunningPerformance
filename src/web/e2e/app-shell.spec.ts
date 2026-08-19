@@ -87,9 +87,13 @@ test('renders profile, races, exercise media and the published plan without hori
   await page.locator('.week-strip button').filter({ hasText: 'Fuerza' }).first().click()
   await expect(page.locator('.session-guide h2')).toContainText('Fuerza, movilidad y pliometría')
   await expect(page.locator('.planned-exercise img').first()).toHaveAttribute('src', /-male-v1\.png/)
-  // Ejercicios dejó de ser una sección aparte: la técnica vive dentro del día.
-  await expect(page.locator('.plan-blocks-intro')).toContainText('Bloque principal')
-  await expect(page.locator('.session-overview')).not.toContainText('Bloque principal')
+  // El día se lee como una secuencia numerada, con la técnica dentro del paso
+  // que la pide, en vez de un párrafo por un lado y los bloques por otro.
+  const pasos = page.locator('.session-step')
+  await expect(pasos.first()).toContainText('Calentamiento')
+  await expect(pasos.last()).toContainText('Vuelta a la calma')
+  await expect(pasos.filter({ has: page.locator('.planned-exercise') })).toHaveCount(5)
+  await expect(page.locator('.session-summary')).toContainText('Cinco bloques')
   const completion = page.locator('.completion-panel')
   await expect(completion).toContainText('Sesión lógica')
   await expect(completion.locator('.logical-load')).toContainText('2')

@@ -16,7 +16,9 @@ single DO block:
   1. reuses the pending draft of the plan, or clones one from the published
      version (app.clone_training_plan_draft, which fails when a draft exists);
   2. replaces the blocks -- and the main_set summary, when the file carries one
-     -- of every session named in the content file;
+     -- of every session named in the content file. A block may carry no
+     exercises: a running session is a sequence of steps (warm up, intervals,
+     recoveries) that the catalogue does not hold, and its instructions say it;
   3. publishes the draft when -Publish is given.
 
 Each session is matched by scheduledDate, optionally narrowed by sessionType and
@@ -89,9 +91,9 @@ foreach ($session in $content.sessions) {
             throw "Session $($session.scheduledDate) uses block type '$($block.blockType)'; allowed: $($blockTypes -join ', ')."
         }
         if (-not $block.instructions) { throw "Every block of $($session.scheduledDate) needs instructions." }
-        if (-not $block.exercises -or $block.exercises.Count -eq 0) {
-            throw "Every block of $($session.scheduledDate) needs at least one exercise."
-        }
+        # A block without exercises is legitimate and the running sessions need
+        # it: a warm-up, an interval and its recovery are steps of the day, not
+        # movements the exercise catalogue holds. The instructions carry them.
         foreach ($exercise in $block.exercises) {
             if (-not $exercise.exerciseSlug) { throw "Every exercise of $($session.scheduledDate) needs an exerciseSlug." }
             if ($null -eq $exercise.sets -and $null -eq $exercise.repetitionsMin -and $null -eq $exercise.durationSeconds) {

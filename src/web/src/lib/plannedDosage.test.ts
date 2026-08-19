@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PlannedExerciseResponse } from '../api/generated'
-import { plannedDosage } from './plannedDosage'
+import { plannedDosage, plannedRest } from './plannedDosage'
 
 function exercise(overrides: Partial<PlannedExerciseResponse>): PlannedExerciseResponse {
   return {
@@ -47,5 +47,23 @@ describe('plannedDosage', () => {
 
   it('says «por lado» for a unilateral exercise counted in time', () => {
     expect(plannedDosage(exercise({ sets: 2, durationSeconds: '25.00', side: 'each' }))).toBe('2 × 25 s por lado')
+  })
+})
+
+describe('plannedRest', () => {
+  it('counts a short rest in seconds', () => {
+    expect(plannedRest(exercise({ restSeconds: 45 }))).toBe('Descanso 45 s')
+  })
+
+  it('counts a whole minute as minutes', () => {
+    expect(plannedRest(exercise({ restSeconds: '60.00' }))).toBe('Descanso 1 min')
+  })
+
+  it('keeps the seconds that do not complete a minute', () => {
+    expect(plannedRest(exercise({ restSeconds: 90 }))).toBe('Descanso 1 min 30 s')
+  })
+
+  it('says nothing when no rest was prescribed', () => {
+    expect(plannedRest(exercise({ restSeconds: null }))).toBeNull()
   })
 })
