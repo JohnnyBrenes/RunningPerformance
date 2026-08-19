@@ -1,27 +1,27 @@
 {
-  "$comment": "Formato de entrada de scripts/Set-ExerciseCatalog.ps1. Ejercicios de gimnasio que el catalogo no cubre. slug, canonicalName, movementPattern y equipment describen el ejercicio; displayName, briefDescription, setup, execution y safetyCues son el contenido de la revision de tecnica, y son el texto que el atleta lee dentro de la sesion, por eso van en espanol. Una entrada nueva no se ve en la app hasta que una sesion la prescribe: la tecnica vive dentro del dia que la pide.",
+  "$comment": "Formato de entrada de scripts/Set-ExerciseCatalog.ps1. slug, canonicalName, movementPattern y equipment describen el ejercicio; displayName, briefDescription, setup, execution y safetyCues son el contenido de la revision de tecnica, y son el texto que el atleta lee dentro de la sesion, por eso van en espanol. Estan escritos para alguien que no reconoce el ejercicio por su nombre: que necesitas, como colocarte, como elegir el peso, que se mueve y que no, que deberias sentir y cuando parar. Una entrada nueva no se ve en la app hasta que una sesion la prescribe. Cambiar este texto crea una revision nueva, pero un plan ya publicado sigue apuntando a la revision anterior: hay que reescribir sus bloques para que tome la nueva.",
   "exercises": [
     {
       "slug": "fondo-en-banco",
       "canonicalName": "Fondo en banco",
       "movementPattern": "push",
-      "equipment": "Banco estable o step alto",
+      "equipment": "Banco o step firme que no se mueva",
       "displayName": "Fondo en banco",
-      "briefDescription": "Trabaja tríceps y pecho con el peso del cuerpo apoyado en un banco.",
-      "setup": "Siéntate al borde del banco, manos junto a la cadera con los dedos hacia adelante y pies apoyados a la distancia que puedas controlar.",
-      "execution": "Baja la cadera cerca del banco doblando los codos hacia atrás y sube extendiendo los brazos sin encoger los hombros.",
-      "safetyCues": "Detén la serie si el hombro se va hacia adelante o aparece pinchazo; acerca los pies para reducir la carga antes que sacrificar el rango."
+      "briefDescription": "Trabaja la parte de atrás del brazo y el pecho con tu propio peso, sin necesidad de máquina.",
+      "setup": "Siéntate en el borde del banco y apoya las manos a los lados de la cadera, separadas al ancho de los hombros y con los dedos apuntando hacia adelante. Estira las piernas al frente con los talones en el suelo. Si te cuesta, dobla las rodillas y acerca los pies al banco: cuanto más cerca, más fácil.",
+      "execution": "Desliza la cadera hacia adelante hasta quedar justo delante del banco, sosteniéndote con los brazos estirados. Baja doblando los codos hacia atrás, sin abrirlos hacia los lados, hasta que el brazo forme un ángulo recto; toma aire mientras bajas. Sube empujando con las manos y suelta el aire arriba. Lo debes sentir en la parte de atrás del brazo.",
+      "safetyCues": "Los hombros se mantienen abajo, lejos de las orejas. Si se van hacia adelante o sientes un pinchazo, baja menos o acerca los pies. No bajes más de lo que puedas subir sin ayuda."
     },
     {
       "slug": "patada-triceps-mancuerna",
       "canonicalName": "Patada de tríceps con mancuerna",
       "movementPattern": "push",
-      "equipment": "Mancuerna y banco",
+      "equipment": "Una mancuerna ligera y un banco",
       "displayName": "Patada de tríceps con mancuerna",
-      "briefDescription": "Aísla el tríceps con poco peso y mucho control del codo.",
-      "setup": "Apoya una mano y una rodilla en el banco, tronco casi paralelo al suelo y codo del brazo que trabaja pegado al costado.",
-      "execution": "Extiende el antebrazo hacia atrás hasta alinear el brazo y vuelve despacio sin mover el codo de su sitio.",
-      "safetyCues": "El tronco no rota ni se balancea; si necesitas impulso para completar la repetición, baja el peso."
+      "briefDescription": "Aísla la parte de atrás del brazo; es un ejercicio de precisión, no de peso.",
+      "setup": "Apoya una mano y la rodilla del mismo lado sobre el banco, con el otro pie en el suelo. Inclina el tronco hasta quedar casi paralelo al piso, con la espalda plana. Toma la mancuerna con el brazo libre y pega el codo al costado, a la altura de las costillas. Elige una mancuerna con la que puedas hacer 15 repeticiones sin balancearte.",
+      "execution": "Sin mover el codo de su sitio, estira el antebrazo hacia atrás hasta que el brazo quede recto, y aguanta un instante. Vuelve despacio, contando dos segundos. Solo se mueve del codo hacia abajo: el hombro y el tronco quedan quietos. Termina todas las repeticiones de un lado antes de cambiar.",
+      "safetyCues": "Si necesitas impulsar el cuerpo para terminar la serie, la mancuerna pesa demasiado. El tronco no rota ni sube; si la espalda se redondea, reparte mejor el apoyo sobre el banco."
     },
     {
       "slug": "extension-triceps-polea",
@@ -29,32 +29,32 @@
       "movementPattern": "push",
       "equipment": "Multiestación: polea alta y barra corta",
       "displayName": "Extensión de tríceps en polea",
-      "briefDescription": "Extiende el codo contra la polea, con el tronco quieto.",
-      "setup": "De pie frente a la polea alta, agarre a la anchura de los hombros, codos junto al cuerpo y pies estables.",
-      "execution": "Baja la barra extendiendo los codos hasta cerca de los muslos y deja que suba con control sin abrir los codos.",
-      "safetyCues": "Evita empujar con el peso del cuerpo; si el tronco tiene que inclinarse para mover la carga, es demasiada."
+      "briefDescription": "El mismo trabajo que el fondo, pero con peso graduable: es el más fácil de ajustar a tu nivel.",
+      "setup": "Coloca la barra corta en la polea alta y elige un peso con el que puedas hacer 15 repeticiones dejando dos o tres en reserva. De pie frente a la máquina, toma la barra con las palmas hacia abajo al ancho de los hombros, da un paso atrás y separa los pies al ancho de la cadera. Pega los codos a los costados.",
+      "execution": "Baja la barra estirando los codos hasta que las manos queden cerca de los muslos, y suelta el aire al bajar. Deja que la barra suba despacio hasta la altura del pecho sin permitir que te levante los codos. El tronco no se mueve en toda la serie.",
+      "safetyCues": "Si tienes que inclinarte hacia adelante o empujar con el peso del cuerpo, baja la carga. Los codos no se abren hacia los lados ni se despegan de las costillas."
     },
     {
       "slug": "empuje-cadera-barra",
       "canonicalName": "Empuje de cadera con barra",
       "movementPattern": "hinge",
-      "equipment": "Barra con discos y colchoneta",
+      "equipment": "Banco firme, barra con discos y una almohadilla para la cadera",
       "displayName": "Empuje de cadera con barra",
-      "briefDescription": "Fortalece glúteo con extensión de cadera y poca demanda de espalda.",
-      "setup": "Sentado en el suelo con la barra sobre la cadera y una colchoneta de protección, rodillas dobladas y pies firmes.",
-      "execution": "Empuja el suelo con los talones hasta alinear cadera y tronco, sostén un instante arriba y baja con control.",
-      "safetyCues": "La extensión viene de la cadera, no de la zona lumbar: mantén las costillas abajo y la mirada al frente."
+      "briefDescription": "Fortalece los glúteos, que son el motor de la zancada, sin cargar la espalda.",
+      "setup": "Siéntate en el suelo con la espalda alta apoyada contra el banco y la barra cruzada sobre el pliegue de la cadera, con la almohadilla en medio. Dobla las rodillas y pon los pies planos al ancho de la cadera, lo bastante cerca como para que arriba las espinillas queden verticales. Si es tu primera vez, hazlo sin barra hasta que el movimiento salga solo.",
+      "execution": "Mete un poco el mentón, empuja el suelo con los talones y sube la cadera hasta que rodillas, cadera y hombros formen una línea. Aprieta los glúteos un segundo arriba y baja con control. Lo debes sentir en los glúteos.",
+      "safetyCues": "La subida sale de la cadera, no de arquear la espalda: mantén las costillas abajo y la mirada al frente, no al techo. Si lo sientes en la espalda baja o en la parte delantera del muslo, acerca o aleja los pies hasta que el esfuerzo vuelva al glúteo."
     },
     {
       "slug": "salto-al-cajon",
       "canonicalName": "Salto al cajón",
       "movementPattern": "plyometric",
-      "equipment": "Cajón estable de altura moderada",
+      "equipment": "Cajón estable que no se deslice",
       "displayName": "Salto al cajón",
-      "briefDescription": "Entrena potencia de piernas con un aterrizaje amortiguado.",
-      "setup": "Cajón firme a un paso de distancia, altura que puedas alcanzar sin encoger mucho las rodillas al aterrizar.",
-      "execution": "Flexiona la cadera, salta y aterriza completo sobre el cajón con las rodillas blandas; baja caminando, no saltando.",
-      "safetyCues": "Corta la serie cuando el aterrizaje deje de ser silencioso o falles la altura; el descenso siempre es caminando."
+      "briefDescription": "Entrena la potencia y, sobre todo, el aterrizaje: enseña a las piernas a absorber el impacto que la carrera repite en cada paso.",
+      "setup": "Usa un cajón firme de una altura que puedas alcanzar sin encoger mucho las rodillas al caer; ante la duda, empieza más bajo. Colócate a un paso de distancia, con los pies al ancho de la cadera.",
+      "execution": "Flexiona cadera y rodillas llevando los brazos atrás, salta y cae con los dos pies completos sobre el cajón, con las rodillas blandas y el pecho alto. Amortigua como si quisieras no hacer ruido. Baja del cajón caminando, un pie a la vez, nunca saltando.",
+      "safetyCues": "Corta la serie cuando el aterrizaje deje de ser silencioso, falles la altura o notes las piernas pesadas: la técnica se degrada antes que la fuerza. Sáltalo si ese día tienes molestia en rodilla, tobillo o tendón."
     },
     {
       "slug": "peso-muerto-barra",
@@ -62,10 +62,10 @@
       "movementPattern": "hinge",
       "equipment": "Barra con discos",
       "displayName": "Peso muerto con barra",
-      "briefDescription": "Levanta la carga del suelo con la cadena posterior y la espalda neutra.",
-      "setup": "Barra sobre el medio del pie, pies a la anchura de la cadera, agarre por fuera de las piernas y pecho alto.",
-      "execution": "Empuja el suelo con las piernas manteniendo la barra pegada al cuerpo y termina extendiendo la cadera; baja por el mismo camino.",
-      "safetyCues": "Si la espalda se redondea al iniciar el tirón, sube la barra sobre soportes o baja el peso; nunca corrijas a media serie."
+      "briefDescription": "Levantar peso del suelo con las piernas y la espalda alineada; es el que más transfiere a la potencia de la zancada y el que más exige técnica.",
+      "setup": "Coloca la barra sobre la mitad del pie, con los pies al ancho de la cadera. Empuja la cadera hacia atrás y baja hasta tomar la barra por fuera de las piernas, con los brazos rectos. Pecho alto, espalda plana y hombros justo por delante de la barra. Empieza con poco peso, incluso la barra sola, hasta que la espalda se mantenga plana sin pensarlo.",
+      "execution": "Empuja el suelo con las piernas y sube manteniendo la barra rozando las piernas, hasta quedar de pie con la cadera completamente extendida. Baja por el mismo camino, llevando primero la cadera atrás. Toma aire abajo, sostenlo durante la subida y suéltalo arriba.",
+      "safetyCues": "Si la espalda se redondea al arrancar, el peso es excesivo o la barra está demasiado baja: reduce la carga o elévala sobre soportes. Nunca corrijas la postura a media serie; deja la barra en el suelo y vuelve a empezar."
     },
     {
       "slug": "cruce-poleas",
@@ -73,10 +73,32 @@
       "movementPattern": "push",
       "equipment": "Multiestación: dos poleas altas y agarres individuales",
       "displayName": "Cruce en poleas",
-      "briefDescription": "Trabaja el pecho con recorrido amplio y tensión constante.",
-      "setup": "Un pie adelante entre las dos poleas, agarres tomados, codos apenas flexionados y tronco ligeramente inclinado.",
-      "execution": "Junta las manos delante del pecho describiendo un arco y regresa acompañando la carga hasta sentir el estiramiento, sin perder la postura.",
-      "safetyCues": "No lleves las manos por detrás de la línea del tronco; si el hombro tira, acorta el recorrido."
+      "briefDescription": "Trabaja el pecho con recorrido amplio y tensión constante; complementa los empujes sin castigar el hombro.",
+      "setup": "Pon las dos poleas arriba, con un agarre individual en cada una, y elige un peso ligero: es un ejercicio de recorrido, no de carga. Colócate en el centro con un pie adelante para no perder el equilibrio, inclina un poco el tronco y deja los codos apenas doblados, fijos así toda la serie.",
+      "execution": "Junta las manos por delante del pecho describiendo un arco amplio, como si abrazaras, y aprieta un instante. Regresa acompañando la carga hasta sentir el estiramiento en el pecho, sin que las manos pasen por detrás de la línea del tronco.",
+      "safetyCues": "Si el hombro tira al final del recorrido, acorta el rango. El codo no se dobla más para ayudar: si eso pasa, baja el peso."
+    },
+    {
+      "slug": "jalon-al-pecho",
+      "canonicalName": "Jalón al pecho",
+      "movementPattern": "pull",
+      "equipment": "Multiestación: polea alta y barra",
+      "displayName": "Jalón al pecho",
+      "briefDescription": "Tirón vertical de espalda: es lo que sostiene la postura del tronco cuando aparece el cansancio al correr.",
+      "setup": "Ajusta el rodillo para que apriete los muslos y no te levante del asiento. Toma la barra un poco más ancho que los hombros con las palmas hacia adelante, siéntate y estira los brazos. Elige un peso que te permita entre 12 y 15 repeticiones dejando dos o tres en reserva.",
+      "execution": "Primero baja los hombros, como alejándolos de las orejas; después lleva los codos hacia las costillas hasta que la barra llegue a la parte alta del pecho. Deja que la barra suba despacio hasta estirar del todo los brazos. El tronco se mantiene casi vertical, con una inclinación mínima.",
+      "safetyCues": "No pases la barra por detrás de la cabeza ni te balancees para bajarla. Si tienes que echar el cuerpo hacia atrás para moverla, baja el peso; si aparece dolor en el hombro, corta la serie."
+    },
+    {
+      "slug": "remo-sentado-polea",
+      "canonicalName": "Remo sentado en polea",
+      "movementPattern": "pull",
+      "equipment": "Multiestación: polea baja y agarre cerrado",
+      "displayName": "Remo sentado en polea",
+      "briefDescription": "Tirón horizontal de espalda: la contraparte del jalón, y el que más ayuda a no encorvarse al final de una tirada larga.",
+      "setup": "Siéntate frente a la polea baja con los pies apoyados en la plataforma y las rodillas ligeramente dobladas, nunca bloqueadas. Toma el agarre y siéntate erguido, con el pecho alto y los brazos estirados sintiendo un estiramiento en la espalda. El peso correcto es el que te deja 15 repeticiones limpias sin necesidad de mecerte.",
+      "execution": "Junta primero los omóplatos, como si sostuvieras algo entre ellos, y después lleva el agarre hacia las costillas bajas con los codos rozando el cuerpo. Estira los brazos despacio, dejando que la espalda se alargue, sin perder la postura del tronco.",
+      "safetyCues": "El tronco se mantiene quieto: si te vas hacia atrás para tirar, o redondeas la espalda al volver, reduce la carga. Los hombros no suben hacia las orejas."
     }
   ]
 }
