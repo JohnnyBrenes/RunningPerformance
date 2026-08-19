@@ -192,7 +192,7 @@ function PlannedExercise({ planned, sex }: { planned: PlannedExerciseResponse; s
   return (
     <article className="planned-exercise">
       <div className="planned-visual">{media ? <img src={media.assetUri} alt={media.altText} width={media.widthPx} height={media.heightPx} loading="lazy" /> : <span aria-hidden="true">{planned.exercise.revision.displayName.charAt(0)}</span>}</div>
-      <div><div className="exercise-meta"><span>{plannedDosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span></div><h3>{planned.exercise.revision.displayName}</h3><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
+      <div><div className="exercise-meta"><span>{plannedDosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span></div><h3>{planned.exercise.revision.displayName}</h3><p className="exercise-brief">{planned.exercise.revision.briefDescription}</p><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
     </article>
   )
 }
