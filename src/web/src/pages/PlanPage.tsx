@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/States'
 import { SessionCompletionPanel } from '../components/SessionCompletionPanel'
 import { getCurrentTrainingPlanOrNull, readableApiError } from '../lib/api'
 import { selectExerciseMedia } from '../lib/exerciseMedia'
+import { plannedDosage } from '../lib/plannedDosage'
 
 export function PlanPage() {
   const queryClient = useQueryClient()
@@ -191,7 +192,7 @@ function PlannedExercise({ planned, sex }: { planned: PlannedExerciseResponse; s
   return (
     <article className="planned-exercise">
       <div className="planned-visual">{media ? <img src={media.assetUri} alt={media.altText} width={media.widthPx} height={media.heightPx} loading="lazy" /> : <span aria-hidden="true">{planned.exercise.revision.displayName.charAt(0)}</span>}</div>
-      <div><div className="exercise-meta"><span>{dosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span></div><h3>{planned.exercise.revision.displayName}</h3><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
+      <div><div className="exercise-meta"><span>{plannedDosage(planned)}</span>{planned.loadValue != null && <span>{Number(planned.loadValue)} {planned.loadUnit ?? 'kg'}</span>}<span>RPE {planned.targetRpe ?? '—'}</span></div><h3>{planned.exercise.revision.displayName}</h3><p>{planned.exercise.revision.execution}</p><details><summary>Preparación y seguridad</summary><p><strong>Equipo:</strong> {planned.exercise.equipment || 'Sin equipo'}</p><p>{planned.exercise.revision.setup}</p><p><strong>Seguridad:</strong> {planned.exercise.revision.safetyCues}</p></details>{planned.note && <small className="coach-note">{planned.note}</small>}</div>
     </article>
   )
 }
@@ -199,15 +200,6 @@ function PlannedExercise({ planned, sex }: { planned: PlannedExerciseResponse; s
 function InfoStep({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
   return <div><span>{label}</span><p>{value}</p></div>
-}
-
-function dosage(planned: PlannedExerciseResponse) {
-  // «por lado» también aplica a las repeticiones: sin esto, un ejercicio unilateral
-  // por repeticiones se leía como si la dosis fuera para los dos lados juntos.
-  const perSide = planned.side === 'each' ? ' por lado' : ''
-  if (planned.durationSeconds != null) return `${planned.sets ?? 1} × ${Number(planned.durationSeconds)} s${perSide}`
-  const repetitions = planned.repetitionsMin === planned.repetitionsMax ? planned.repetitionsMin : `${planned.repetitionsMin}–${planned.repetitionsMax}`
-  return `${planned.sets ?? 1} × ${repetitions ?? '—'} rep${perSide}`
 }
 
 function minutes(value: number | string | null) {
