@@ -12,6 +12,7 @@ export type { ActivityPageResponse } from './models/ActivityPageResponse';
 export type { ActivityPlannedContextResponse } from './models/ActivityPlannedContextResponse';
 export type { ActivityRecentComparisonResponse } from './models/ActivityRecentComparisonResponse';
 export type { ActivitySamplesReviewResponse } from './models/ActivitySamplesReviewResponse';
+export type { ActivitySessionSignalsResponse } from './models/ActivitySessionSignalsResponse';
 export type { ActivitySourceResponse } from './models/ActivitySourceResponse';
 export type { ActivitySummaryResponse } from './models/ActivitySummaryResponse';
 export type { AthleteProfileResponse } from './models/AthleteProfileResponse';
