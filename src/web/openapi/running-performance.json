@@ -2038,7 +2038,8 @@
           "elevationGainM",
           "lapCount",
           "sources",
-          "plannedContext"
+          "plannedContext",
+          "recentComparison"
         ],
         "type": "object",
         "properties": {
@@ -2152,6 +2153,16 @@
               },
               {
                 "$ref": "#/components/schemas/ActivityPlannedContextResponse"
+              }
+            ]
+          },
+          "recentComparison": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActivityRecentComparisonResponse"
               }
             ]
           }
@@ -2354,6 +2365,71 @@
             "format": "double"
           },
           "srpeLoad": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ActivityRecentComparisonResponse": {
+        "required": [
+          "windowDays",
+          "sampleSize",
+          "minDistanceM",
+          "maxDistanceM",
+          "medianPaceSecondsPerKm",
+          "medianHeartRateBpm"
+        ],
+        "type": "object",
+        "properties": {
+          "windowDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sampleSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "minDistanceM": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "maxDistanceM": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "medianPaceSecondsPerKm": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "medianHeartRateBpm": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "null",
