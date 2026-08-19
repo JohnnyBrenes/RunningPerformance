@@ -13,7 +13,7 @@ test('renders profile, races, exercise media and the published plan without hori
   await expect(weekAgenda.getByRole('heading', { name: 'Hoy' })).toBeVisible()
   await expect(weekAgenda.getByRole('heading', { name: 'Mañana' })).toBeVisible()
   await expect(weekAgenda.getByRole('heading', { name: 'Pendiente esta semana' })).toBeVisible()
-  await expect(weekAgenda).toContainText(/Descanso|Gimnasio|Caminadora|Correr/)
+  await expect(weekAgenda).toContainText(/Descanso|Fuerza|Caminadora|Correr/)
   await expect(weekAgenda.locator('.week-agenda-session').first()).toHaveAttribute('href', /\/plan\?version=.+&session=.+/)
   await expect(page.locator('.next-race-card')).toContainText('Fecha')
   await expect(page.locator('.next-race-card')).toContainText('Distancia')

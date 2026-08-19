@@ -32,7 +32,7 @@ export function buildRemainingWeekAgenda(
 
 export function sessionAgendaTitle(session: PlannedSessionResponse): string {
   const type = session.sessionType.toLowerCase()
-  if (type.includes('strength') || type.includes('gym') || session.modality === 'strength') return 'Gimnasio'
+  if (type.includes('strength') || type.includes('gym') || session.modality === 'strength') return 'Fuerza'
   if (type.includes('cross')) return 'Entrenamiento cruzado'
   if (type.includes('mobility')) return 'Movilidad'
 

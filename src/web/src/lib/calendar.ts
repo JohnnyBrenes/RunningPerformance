@@ -90,7 +90,7 @@ export function sessionKind(
   const terrain = session.terrain?.toLowerCase() ?? ''
 
   if (sessionType.includes('strength') || sessionType.includes('gym') || modality === 'strength') {
-    return { label: 'Gimnasio', icon: '◆', className: 'gym' }
+    return { label: 'Fuerza', icon: '◆', className: 'gym' }
   }
   if (modality === 'treadmill' || /cinta|caminadora|treadmill/.test(terrain)) {
     return { label: 'Caminadora', icon: '▱', className: 'treadmill' }

@@ -30,7 +30,7 @@ describe('remaining week agenda', () => {
     expect(sessionAgendaDetail(quality)).toBe('Series')
     expect(sessionAgendaTitle(longRun)).toBe('Correr exterior 15 km')
     expect(sessionAgendaDetail(longRun)).toBe('Tirada larga')
-    expect(sessionAgendaTitle(gym)).toBe('Gimnasio')
+    expect(sessionAgendaTitle(gym)).toBe('Fuerza')
     expect(sessionAgendaDetail(gym)).toBe('Piernas, Pliometría')
   })
 })
