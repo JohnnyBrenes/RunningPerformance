@@ -15,8 +15,14 @@ single DO block:
 
   1. reuses the pending draft of the plan, or clones one from the published
      version (app.clone_training_plan_draft, which fails when a draft exists);
-  2. replaces the blocks of every session named in the content file;
+  2. replaces the blocks -- and the main_set summary, when the file carries one
+     -- of every session named in the content file;
   3. publishes the draft when -Publish is given.
+
+Each session is matched by scheduledDate, optionally narrowed by sessionType and
+modality when the week schedules more than one session that day. scheduledDate
+also accepts today[+-N], which the local seed needs: it schedules its week from
+current_date, so a fixed date stops matching the day after it is written.
 
 Run it with -DatabaseUrl to apply the script through psql, or without it to
 print the SQL for the Supabase SQL editor.
@@ -59,8 +65,21 @@ if (-not $content.sessions -or $content.sessions.Count -eq 0) { throw 'The conte
 
 $blockTypes = @('warmup', 'main', 'cooldown', 'circuit', 'mobility')
 foreach ($session in $content.sessions) {
-    if ($session.scheduledDate -notmatch '^\d{4}-\d{2}-\d{2}$') {
-        throw "Session scheduledDate '$($session.scheduledDate)' is not an ISO date."
+    # The local seed schedules its week from current_date, so a fixed ISO date
+    # stops matching the day after the file is written. today[+-N] keeps a
+    # sample runnable, and resolves here so the SQL still carries a real date.
+    if ($session.scheduledDate -match '^today(?:\s*([+-])\s*(\d+))?$') {
+        $offset = if ($Matches[2]) { [int] $Matches[2] } else { 0 }
+        if ($Matches[1] -eq '-') { $offset = -$offset }
+        $resolved = (Get-Date).Date.AddDays($offset).ToString('yyyy-MM-dd')
+        Write-Host "Session '$($session.scheduledDate)' resolves to $resolved."
+        $session.scheduledDate = $resolved
+    }
+    elseif ($session.scheduledDate -notmatch '^\d{4}-\d{2}-\d{2}$') {
+        throw "Session scheduledDate '$($session.scheduledDate)' is neither an ISO date nor today[+-N]."
+    }
+    if ($null -ne $session.mainSet -and $session.mainSet -isnot [string]) {
+        throw "Session $($session.scheduledDate) has a mainSet that is not text."
     }
     if (-not $session.blocks -or $session.blocks.Count -eq 0) {
         throw "Session $($session.scheduledDate) has no blocks; an empty list would only delete the existing ones."
@@ -132,6 +151,8 @@ declare
   block_position integer;
   exercise_position integer;
   target_session_id uuid;
+  match_count integer;
+  match_summary text;
   new_block_id uuid;
   revision_id uuid;
 begin
@@ -174,13 +195,54 @@ begin
   end if;
 
   for session_entry in select * from jsonb_array_elements(content->'sessions') loop
-    -- strict fails loudly when the date matches no session or more than one,
-    -- instead of silently writing the blocks onto an arbitrary row.
-    select id into strict target_session_id
+    -- The date alone does not identify a session: nothing stops a week from
+    -- scheduling strength and a run on the same day, so sessionType and
+    -- modality narrow it down. Count first and name what was found, instead of
+    -- writing the blocks onto an arbitrary row or failing without a clue.
+    select count(*), string_agg(
+             session_type || coalesce(' (' || modality || ')', ''), ', ' order by session_type)
+      into match_count, match_summary
     from app.planned_sessions
     where owner_id = owner_id_value
       and training_plan_version_id = draft_version.id
-      and scheduled_date = (session_entry->>'scheduledDate')::date;
+      and scheduled_date = (session_entry->>'scheduledDate')::date
+      and (session_entry->>'sessionType' is null
+           or session_type = session_entry->>'sessionType')
+      and (session_entry->>'modality' is null
+           or modality = session_entry->>'modality');
+
+    if match_count = 0 then
+      raise exception 'No session on % in draft v% matches %.',
+        session_entry->>'scheduledDate',
+        draft_version.version_number,
+        coalesce(
+          nullif(concat_ws(' / ', session_entry->>'sessionType', session_entry->>'modality'), ''),
+          'that date');
+    elsif match_count > 1 then
+      raise exception 'Draft v% has % sessions on %: %. Add sessionType or modality to the content file.',
+        draft_version.version_number, match_count,
+        session_entry->>'scheduledDate', match_summary;
+    end if;
+
+    select id into target_session_id
+    from app.planned_sessions
+    where owner_id = owner_id_value
+      and training_plan_version_id = draft_version.id
+      and scheduled_date = (session_entry->>'scheduledDate')::date
+      and (session_entry->>'sessionType' is null
+           or session_type = session_entry->>'sessionType')
+      and (session_entry->>'modality' is null
+           or modality = session_entry->>'modality');
+
+    -- main_set has no writer anywhere else (the API only exposes ScheduledDate
+    -- and Objective). With blocks present the UI shows it as their short
+    -- summary, so leaving the previous prose there would restate the whole
+    -- session above the blocks it is meant to introduce.
+    if session_entry ? 'mainSet' then
+      update app.planned_sessions
+      set main_set = nullif(session_entry->>'mainSet', '')
+      where owner_id = owner_id_value and id = target_session_id;
+    end if;
 
     delete from app.planned_session_blocks
     where owner_id = owner_id_value and planned_session_id = target_session_id;
@@ -260,11 +322,17 @@ if ($null -eq $psql) {
 }
 
 $scriptPath = Join-Path ([IO.Path]::GetTempPath()) "planned-session-blocks-$([Guid]::NewGuid()).sql"
+# psql reads the file with the client encoding, which on Windows comes from the
+# console code page, not from the file. The content is Spanish prose the athlete
+# reads inside the session, so an unset encoding stores mojibake without error.
+$previousClientEncoding = $env:PGCLIENTENCODING
+$env:PGCLIENTENCODING = 'UTF8'
 try {
     $sql | Set-Content -LiteralPath $scriptPath -Encoding utf8 -NoNewline
     & $psql.Source @('--set', 'ON_ERROR_STOP=1', '--no-psqlrc', '--file', $scriptPath, $DatabaseUrl)
     if ($LASTEXITCODE -ne 0) { throw "psql exited with code $LASTEXITCODE; nothing was committed." }
 }
 finally {
+    $env:PGCLIENTENCODING = $previousClientEncoding
     Remove-Item -LiteralPath $scriptPath -ErrorAction SilentlyContinue
 }

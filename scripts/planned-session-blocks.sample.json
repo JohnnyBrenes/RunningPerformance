@@ -1,10 +1,12 @@
 {
-  "$comment": "Formato de entrada de scripts/Set-PlannedSessionBlocks.ps1. Contenido sintético del atleta A; ajusta scheduledDate a una sesión que exista en el plan. Las posiciones salen del orden de los arreglos. instructions y note son texto visible en la app, por eso van en español.",
+  "$comment": "Formato de entrada de scripts/Set-PlannedSessionBlocks.ps1. Contenido sintético del atleta A. scheduledDate acepta una fecha ISO o today[+-N]: el seed agenda su semana desde current_date, así que una fecha fija deja de coincidir al día siguiente. sessionType y modality son opcionales y solo hacen falta si ese día hay más de una sesión. mainSet reescribe el resumen corto que encabeza los bloques; si se omite, el texto anterior queda intacto. Las posiciones salen del orden de los arreglos. instructions, note y mainSet son texto visible en la app, por eso van en español.",
   "planName": "Semana de base y fuerza",
   "draftRationale": "Poblar los bloques estructurados de la sesión de fuerza para que la técnica se vea dentro del día.",
   "sessions": [
     {
-      "scheduledDate": "2026-08-18",
+      "scheduledDate": "today",
+      "sessionType": "strength_mobility_plyometrics",
+      "mainSet": "Cinco bloques: activación, reactividad, fuerza de piernas, tren superior y accesorio.",
       "blocks": [
         {
           "blockType": "mobility",
