@@ -1,0 +1,149 @@
+{
+  "$comment": "Formato de entrada de scripts/Set-PlannedSessionBlocks.ps1. Contenido sintético del atleta A; ajusta scheduledDate a una sesión que exista en el plan. Las posiciones salen del orden de los arreglos. instructions y note son texto visible en la app, por eso van en español.",
+  "planName": "Semana de base y fuerza",
+  "draftRationale": "Poblar los bloques estructurados de la sesión de fuerza para que la técnica se vea dentro del día.",
+  "sessions": [
+    {
+      "scheduledDate": "2026-08-18",
+      "blocks": [
+        {
+          "blockType": "mobility",
+          "repeatCount": 1,
+          "instructions": "Activa el tronco antes de cargar. Controla la respiración y no compenses con el cuello.",
+          "exercises": [
+            {
+              "exerciseSlug": "plancha-lateral",
+              "sets": 2,
+              "durationSeconds": 25,
+              "restSeconds": 30,
+              "targetRpe": 6,
+              "targetRir": 3,
+              "side": "each",
+              "note": "25 s por lado; corta si la cadera se cae."
+            },
+            {
+              "exerciseSlug": "press-pallof-polea",
+              "sets": 2,
+              "repetitionsMin": 8,
+              "repetitionsMax": 10,
+              "restSeconds": 45,
+              "targetRpe": 6,
+              "targetRir": 3,
+              "side": "each",
+              "note": "Resiste la rotación: el tronco no gira."
+            }
+          ]
+        },
+        {
+          "blockType": "main",
+          "repeatCount": 1,
+          "instructions": "Reactividad con las piernas frescas, antes de la fuerza pesada. Aterrizajes silenciosos y postura alta.",
+          "exercises": [
+            {
+              "exerciseSlug": "pogos-tobillo",
+              "sets": 2,
+              "repetitionsMin": 20,
+              "repetitionsMax": 20,
+              "restSeconds": 90,
+              "targetRpe": 6,
+              "targetRir": 4,
+              "note": "Cuenta contactos; corta antes si dejan de ser silenciosos."
+            }
+          ]
+        },
+        {
+          "blockType": "main",
+          "repeatCount": 1,
+          "instructions": "Fuerza del tren inferior con técnica estable. Deja dos o tres repeticiones limpias en reserva.",
+          "exercises": [
+            {
+              "exerciseSlug": "sentadilla-goblet",
+              "sets": 3,
+              "repetitionsMin": 8,
+              "repetitionsMax": 10,
+              "restSeconds": 75,
+              "targetRpe": 7,
+              "targetRir": 3,
+              "tempo": "3-1-1"
+            },
+            {
+              "exerciseSlug": "peso-muerto-rumano",
+              "sets": 3,
+              "repetitionsMin": 8,
+              "repetitionsMax": 10,
+              "restSeconds": 75,
+              "targetRpe": 7,
+              "targetRir": 3,
+              "tempo": "3-1-1",
+              "note": "Mantén la carga cerca de las piernas."
+            },
+            {
+              "exerciseSlug": "step-up-mancuernas",
+              "sets": 3,
+              "repetitionsMin": 8,
+              "repetitionsMax": 8,
+              "restSeconds": 60,
+              "loadValue": 5,
+              "loadUnit": "kg",
+              "targetRpe": 7,
+              "targetRir": 3,
+              "side": "each",
+              "note": "Sube empujando con la pierna de arriba; baja controlando."
+            }
+          ]
+        },
+        {
+          "blockType": "main",
+          "repeatCount": 1,
+          "instructions": "Tren superior para sostener la postura en los kilómetros finales.",
+          "exercises": [
+            {
+              "exerciseSlug": "jalon-al-pecho",
+              "sets": 3,
+              "repetitionsMin": 8,
+              "repetitionsMax": 10,
+              "restSeconds": 60,
+              "targetRpe": 7,
+              "targetRir": 3
+            },
+            {
+              "exerciseSlug": "remo-sentado-polea",
+              "sets": 3,
+              "repetitionsMin": 8,
+              "repetitionsMax": 10,
+              "restSeconds": 60,
+              "targetRpe": 7,
+              "targetRir": 3
+            },
+            {
+              "exerciseSlug": "press-pecho-maquina",
+              "sets": 2,
+              "repetitionsMin": 10,
+              "repetitionsMax": 12,
+              "restSeconds": 60,
+              "targetRpe": 6,
+              "targetRir": 4
+            }
+          ]
+        },
+        {
+          "blockType": "main",
+          "repeatCount": 1,
+          "instructions": "Accesorio final de cuádriceps, sin llegar al fallo.",
+          "exercises": [
+            {
+              "exerciseSlug": "extension-rodilla-maquina",
+              "sets": 2,
+              "repetitionsMin": 12,
+              "repetitionsMax": 15,
+              "restSeconds": 60,
+              "targetRpe": 6,
+              "targetRir": 4,
+              "note": "Para la serie si aparece molestia en la rodilla."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
