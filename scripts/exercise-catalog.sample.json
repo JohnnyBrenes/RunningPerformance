@@ -1,0 +1,82 @@
+{
+  "$comment": "Formato de entrada de scripts/Set-ExerciseCatalog.ps1. Ejercicios de gimnasio que el catalogo no cubre. slug, canonicalName, movementPattern y equipment describen el ejercicio; displayName, briefDescription, setup, execution y safetyCues son el contenido de la revision de tecnica, y son el texto que el atleta lee dentro de la sesion, por eso van en espanol. Una entrada nueva no se ve en la app hasta que una sesion la prescribe: la tecnica vive dentro del dia que la pide.",
+  "exercises": [
+    {
+      "slug": "fondo-en-banco",
+      "canonicalName": "Fondo en banco",
+      "movementPattern": "push",
+      "equipment": "Banco estable o step alto",
+      "displayName": "Fondo en banco",
+      "briefDescription": "Trabaja tríceps y pecho con el peso del cuerpo apoyado en un banco.",
+      "setup": "Siéntate al borde del banco, manos junto a la cadera con los dedos hacia adelante y pies apoyados a la distancia que puedas controlar.",
+      "execution": "Baja la cadera cerca del banco doblando los codos hacia atrás y sube extendiendo los brazos sin encoger los hombros.",
+      "safetyCues": "Detén la serie si el hombro se va hacia adelante o aparece pinchazo; acerca los pies para reducir la carga antes que sacrificar el rango."
+    },
+    {
+      "slug": "patada-triceps-mancuerna",
+      "canonicalName": "Patada de tríceps con mancuerna",
+      "movementPattern": "push",
+      "equipment": "Mancuerna y banco",
+      "displayName": "Patada de tríceps con mancuerna",
+      "briefDescription": "Aísla el tríceps con poco peso y mucho control del codo.",
+      "setup": "Apoya una mano y una rodilla en el banco, tronco casi paralelo al suelo y codo del brazo que trabaja pegado al costado.",
+      "execution": "Extiende el antebrazo hacia atrás hasta alinear el brazo y vuelve despacio sin mover el codo de su sitio.",
+      "safetyCues": "El tronco no rota ni se balancea; si necesitas impulso para completar la repetición, baja el peso."
+    },
+    {
+      "slug": "extension-triceps-polea",
+      "canonicalName": "Extensión de tríceps en polea",
+      "movementPattern": "push",
+      "equipment": "Multiestación: polea alta y barra corta",
+      "displayName": "Extensión de tríceps en polea",
+      "briefDescription": "Extiende el codo contra la polea, con el tronco quieto.",
+      "setup": "De pie frente a la polea alta, agarre a la anchura de los hombros, codos junto al cuerpo y pies estables.",
+      "execution": "Baja la barra extendiendo los codos hasta cerca de los muslos y deja que suba con control sin abrir los codos.",
+      "safetyCues": "Evita empujar con el peso del cuerpo; si el tronco tiene que inclinarse para mover la carga, es demasiada."
+    },
+    {
+      "slug": "empuje-cadera-barra",
+      "canonicalName": "Empuje de cadera con barra",
+      "movementPattern": "hinge",
+      "equipment": "Barra con discos y colchoneta",
+      "displayName": "Empuje de cadera con barra",
+      "briefDescription": "Fortalece glúteo con extensión de cadera y poca demanda de espalda.",
+      "setup": "Sentado en el suelo con la barra sobre la cadera y una colchoneta de protección, rodillas dobladas y pies firmes.",
+      "execution": "Empuja el suelo con los talones hasta alinear cadera y tronco, sostén un instante arriba y baja con control.",
+      "safetyCues": "La extensión viene de la cadera, no de la zona lumbar: mantén las costillas abajo y la mirada al frente."
+    },
+    {
+      "slug": "salto-al-cajon",
+      "canonicalName": "Salto al cajón",
+      "movementPattern": "plyometric",
+      "equipment": "Cajón estable de altura moderada",
+      "displayName": "Salto al cajón",
+      "briefDescription": "Entrena potencia de piernas con un aterrizaje amortiguado.",
+      "setup": "Cajón firme a un paso de distancia, altura que puedas alcanzar sin encoger mucho las rodillas al aterrizar.",
+      "execution": "Flexiona la cadera, salta y aterriza completo sobre el cajón con las rodillas blandas; baja caminando, no saltando.",
+      "safetyCues": "Corta la serie cuando el aterrizaje deje de ser silencioso o falles la altura; el descenso siempre es caminando."
+    },
+    {
+      "slug": "peso-muerto-barra",
+      "canonicalName": "Peso muerto con barra",
+      "movementPattern": "hinge",
+      "equipment": "Barra con discos",
+      "displayName": "Peso muerto con barra",
+      "briefDescription": "Levanta la carga del suelo con la cadena posterior y la espalda neutra.",
+      "setup": "Barra sobre el medio del pie, pies a la anchura de la cadera, agarre por fuera de las piernas y pecho alto.",
+      "execution": "Empuja el suelo con las piernas manteniendo la barra pegada al cuerpo y termina extendiendo la cadera; baja por el mismo camino.",
+      "safetyCues": "Si la espalda se redondea al iniciar el tirón, sube la barra sobre soportes o baja el peso; nunca corrijas a media serie."
+    },
+    {
+      "slug": "cruce-poleas",
+      "canonicalName": "Cruce en poleas",
+      "movementPattern": "push",
+      "equipment": "Multiestación: dos poleas altas y agarres individuales",
+      "displayName": "Cruce en poleas",
+      "briefDescription": "Trabaja el pecho con recorrido amplio y tensión constante.",
+      "setup": "Un pie adelante entre las dos poleas, agarres tomados, codos apenas flexionados y tronco ligeramente inclinado.",
+      "execution": "Junta las manos delante del pecho describiendo un arco y regresa acompañando la carga hasta sentir el estiramiento, sin perder la postura.",
+      "safetyCues": "No lleves las manos por detrás de la línea del tronco; si el hombro tira, acorta el recorrido."
+    }
+  ]
+}

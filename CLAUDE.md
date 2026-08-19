@@ -49,6 +49,22 @@ npm --prefix src/web run build
 npm --prefix src/web run test:e2e                     # Playwright (Chromium + WebKit)
 ```
 
+Autoría de contenido (no hay UI ni endpoint para esto; ver más abajo):
+
+```powershell
+# Bloques y ejercicios de una sesión planeada: clona borrador, reconstruye y publica
+pwsh ./scripts/Set-PlannedSessionBlocks.ps1 -ContentPath ./scripts/planned-session-blocks.sample.json `
+  -OwnerId <uuid> -DatabaseUrl <url> [-Publish]
+
+# Catálogo de ejercicios: alta por slug y revisión nueva cuando cambia la técnica
+pwsh ./scripts/Set-ExerciseCatalog.ps1 -ContentPath ./scripts/exercise-catalog.sample.json `
+  -OwnerId <uuid> -DatabaseUrl <url>
+```
+
+Sin `-DatabaseUrl` imprimen el SQL (o lo escriben con `-SqlOutPath`) para pegarlo en el editor de Supabase.
+**Poblar y publicar antes de que se ejecuten las sesiones de la semana:** publicar una versión nueva deja los
+vínculos actividad–sesión, resultados y check-ins en la versión anterior, y el dashboard solo cuenta la publicada.
+
 Puertas de publicación (PowerShell, todas locales — **no hay GitHub Actions**):
 
 ```powershell
@@ -157,7 +173,8 @@ React 19 + Vite + react-router (rutas en `App.tsx`, todas lazy y bajo `Protected
 
 - **`app.activities` es una sola tabla** para running y fuerza, distinguidas por `activity_category`/`modality`. No hay tablas separadas.
 - **Planificado vs. realizado**: `activities` ←→ `planned_sessions` vía `activity_session_links` (`proposed`/`confirmed`/`withdrawn`/`rejected`; solo un vínculo activo por actividad). Varias actividades vinculadas a una misma sesión planeada forman una **"sesión lógica"** (ver la vista `app.v_logical_session_srpe`).
-- **Ejercicios de fuerza**: `planned_sessions` → `planned_session_blocks` → `planned_session_exercises` → `exercise_revisions` (técnica, imágenes, cues de seguridad). El componente `PlannedExercise` en `PlanPage.tsx` ya los renderiza inline. El campo `planned_sessions.main_set` es una **alternativa de texto libre** a esos bloques estructurados; algunas sesiones usan uno y no el otro.
+- **Ejercicios de fuerza**: `planned_sessions` → `planned_session_blocks` → `planned_session_exercises` → `exercise_revisions` (técnica, imágenes, cues de seguridad). El componente `PlannedExercise` en `PlanPage.tsx` ya los renderiza inline. El campo `planned_sessions.main_set` es una **alternativa de texto libre** a esos bloques estructurados; cuando la sesión tiene bloques, la UI lo muestra como su resumen corto. **Nada de esto tiene superficie de escritura**: la API solo cambia `ScheduledDate` y `Objective`, el catálogo de ejercicios es de solo lectura, y los únicos escritores son el seed y los dos scripts de autoría de arriba.
+- **Series de fuerza del reloj**: los archivos FIT de gimnasio traen mensajes `set` (repeticiones, duración, categoría de ejercicio), pero `FitActivityNormalizer` solo normaliza `session`, `lap`, `event` y `record`, así que ese detalle no se persiste hoy.
 - **Asimetría a tener presente**: `GET /api/v1/activities/{id}` devuelve la actividad y su procedencia, pero **no** la sesión planeada. La relación se expone por el otro lado, en `GET /api/v1/sessions/{id}/completion` (indexado por sesión planeada).
 - **Ajustes de plan**: `PlanVersionAdjustmentRequest`/`PlannedSessionAdjustmentRequest` solo permiten cambiar `ScheduledDate` y `Objective` — no volumen, ritmo, RPE ni bloques.
 
