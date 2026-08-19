@@ -566,6 +566,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--forest-soft); ba
 .planned-comparison dd em { border-radius: 999px; background: rgba(255,255,255,.14); padding: .2rem .5rem; font-size: .6rem; font-style: normal; font-weight: 800; }
 .planned-comparison small { display: block; margin-top: .7rem; color: #9db9b0; font-size: .66rem; line-height: 1.5; }
 .recent-comparison { margin-top: 1rem; }
+.session-summary { margin-top: 1.25rem; border-top: 1px solid rgba(255,255,255,.14); border-left: 3px solid #9dc3b8; padding: 1rem 0 .25rem .85rem; }
+.session-summary.level-yellow { border-left-color: #e2c56b; }
+.session-summary.level-red { border-left-color: #e08d7b; }
+.session-headline { margin: .45rem 0 0; font-family: Georgia, serif; font-size: 1.1rem; line-height: 1.4; }
+.session-summary ul { margin: .6rem 0 0; padding-left: 1.05rem; }
+.session-summary li { margin-top: .3rem; color: #cfe3da; font-size: .76rem; line-height: 1.5; }
+.data-origin { margin: 1.15rem 0 0; border-top: 1px solid rgba(255,255,255,.14); padding-top: .8rem; color: #9db9b0; font-size: .68rem; line-height: 1.5; }
 .activity-table { min-width: 850px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; }
 .pagination button:disabled { color: #aeb3aa; cursor: default; }
