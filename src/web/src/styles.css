@@ -256,6 +256,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--forest-soft); ba
 .session-overview div { padding: 1rem 1.2rem; border-bottom: 1px solid #eceee8; }
 .session-overview span { color: var(--forest-soft); font-size: .64rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .session-overview p { margin: .35rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+.plan-blocks-intro { padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); }
+.plan-blocks-intro p { margin: .35rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }
 .plan-block { padding: 1.2rem; border-bottom: 1px solid var(--line); }
 .plan-block > header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .75rem; }
 .plan-block > header p { margin: .35rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }

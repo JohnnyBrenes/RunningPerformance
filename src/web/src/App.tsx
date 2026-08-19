@@ -11,7 +11,6 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({
 const RacesPage = lazy(() => import('./pages/RacesPage').then((module) => ({ default: module.RacesPage })))
 const CalendarPage = lazy(() => import('./pages/CalendarPage').then((module) => ({ default: module.CalendarPage })))
 const PlanPage = lazy(() => import('./pages/PlanPage').then((module) => ({ default: module.PlanPage })))
-const ExercisesPage = lazy(() => import('./pages/ExercisesPage').then((module) => ({ default: module.ExercisesPage })))
 const EvaluationsPage = lazy(() => import('./pages/EvaluationsPage').then((module) => ({ default: module.EvaluationsPage })))
 const ActivitiesPage = lazy(() => import('./pages/ActivitiesPage').then((module) => ({ default: module.ActivitiesPage })))
 
@@ -40,7 +39,6 @@ export function App() {
               <Route path="plan" element={<PlanPage />} />
               <Route path="evaluations" element={<EvaluationsPage />} />
               <Route path="activities" element={<ActivitiesPage />} />
-              <Route path="exercises" element={<ExercisesPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

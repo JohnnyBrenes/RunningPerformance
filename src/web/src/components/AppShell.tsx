@@ -8,7 +8,6 @@ const navigation = [
   { to: '/plan', label: 'Plan', glyph: '≋', end: false },
   { to: '/activities', label: 'Actividades', glyph: '↗', end: false },
   { to: '/evaluations', label: 'Revisión semanal', glyph: '✓', end: false },
-  { to: '/exercises', label: 'Ejercicios', glyph: '◇', end: false },
   { to: '/races', label: 'Carreras', glyph: '△', end: false },
   { to: '/profile', label: 'Perfil', glyph: '◯', end: false },
 ] as const
