@@ -189,7 +189,7 @@ select is(
      on s.owner_id = b.owner_id and s.id = b.planned_session_id
    where s.training_plan_version_id = :'draft_id'::uuid
      and s.session_type = 'strength_mobility_plyometrics'),
-  array[1, 2, 3],
+  array[1, 2, 3, 4, 5],
   'published session blocks retain their explicit order'
 );
 
