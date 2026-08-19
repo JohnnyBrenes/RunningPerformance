@@ -27,7 +27,7 @@ describe('calendar presentation rules', () => {
   })
 
   it('maps planned sessions to user-facing activity kinds', () => {
-    expect(sessionKind({ sessionType: 'strength_mobility_plyometrics', modality: 'mixed', terrain: null }).label).toBe('Gimnasio')
+    expect(sessionKind({ sessionType: 'strength_mobility_plyometrics', modality: 'mixed', terrain: null }).label).toBe('Fuerza')
     expect(sessionKind({ sessionType: 'easy_run', modality: 'running', terrain: 'Caminadora al 2%' }).label).toBe('Caminadora')
     expect(sessionKind({ sessionType: 'long_run', modality: 'running', terrain: 'Ruta conocida' }).label).toBe('Correr exterior')
     expect(sessionKind({ sessionType: 'quality', modality: 'running', terrain: null }).label).toBe('Correr')
