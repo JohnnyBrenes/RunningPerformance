@@ -8,6 +8,13 @@ namespace RunningPerformance.Api.Features;
 
 public static class ActivityEndpoints
 {
+    // `coach-method-v1` reads the runner profile over up to 12 weeks, so recent
+    // means the same horizon here. Pace depends on distance, so only sessions of
+    // a similar length compare; below the minimum sample nothing is claimed.
+    private const int RecentWindowDays = 90;
+    private const decimal RecentDistanceBand = 0.25m;
+    private const int RecentMinimumSample = 3;
+
     public static IEndpointRouteBuilder MapActivityEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/v1/activities").WithTags("Activities");
@@ -206,6 +213,7 @@ public static class ActivityEndpoints
                     GetNullableValue<decimal>(reader, 23),
                     GetNullableValue<int>(reader, 24),
                     [],
+                    null,
                     null);
             }
         }
@@ -259,9 +267,81 @@ public static class ActivityEndpoints
         }
 
         var plannedContext = await ReadPlannedContextAsync(session, id, cancellationToken);
+        var recentComparison = await ReadRecentComparisonAsync(session, id, cancellationToken);
 
         await session.CommitAsync(cancellationToken);
-        return Results.Ok(detail with { Sources = sources, PlannedContext = plannedContext });
+        return Results.Ok(detail with
+        {
+            Sources = sources,
+            PlannedContext = plannedContext,
+            RecentComparison = recentComparison,
+        });
+    }
+
+    /// <summary>
+    /// Summarises comparable sessions that preceded this one: same category and
+    /// modality, similar distance, inside the recent window. Returns null when
+    /// too few sessions qualify, so the caller never reads a median of one.
+    /// </summary>
+    private static async Task<ActivityRecentComparisonResponse?> ReadRecentComparisonAsync(
+        OwnerDbSession session,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = session.Connection.CreateCommand();
+        command.Transaction = session.Transaction;
+        command.CommandText = """
+            with target as (
+              select id, activity_category, modality, distance_m, started_at_local
+              from app.activities
+              where id = @activity_id
+            ),
+            comparable as (
+              select
+                coalesce(
+                  activity.average_pace_seconds_per_km,
+                  activity.duration_seconds / nullif(activity.distance_m / 1000.0, 0)) as pace,
+                activity.average_heart_rate_bpm as heart_rate
+              from app.activities activity, target
+              where activity.id <> target.id
+                and activity.activity_category is not distinct from target.activity_category
+                and activity.modality is not distinct from target.modality
+                and activity.validation_status <> 'quarantined'
+                and activity.started_at_local < target.started_at_local
+                and activity.started_at_local
+                  >= target.started_at_local - make_interval(days => @window_days)
+                and activity.distance_m
+                  between target.distance_m * (1 - @band) and target.distance_m * (1 + @band)
+                and activity.distance_m > 0
+                and activity.duration_seconds > 0
+            )
+            select
+              count(*)::int,
+              percentile_cont(0.5) within group (order by pace)::numeric,
+              percentile_cont(0.5) within group (order by heart_rate)::numeric,
+              (select distance_m * (1 - @band) from target),
+              (select distance_m * (1 + @band) from target)
+            from comparable;
+            """;
+        command.Parameters.AddWithValue("activity_id", activityId);
+        command.Parameters.AddWithValue("window_days", RecentWindowDays);
+        command.Parameters.AddWithValue("band", RecentDistanceBand);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        var sampleSize = reader.GetInt32(0);
+        return sampleSize < RecentMinimumSample
+            ? null
+            : new(
+                RecentWindowDays,
+                sampleSize,
+                GetNullableValue<decimal>(reader, 3),
+                GetNullableValue<decimal>(reader, 4),
+                GetNullableValue<decimal>(reader, 1),
+                GetNullableValue<decimal>(reader, 2));
     }
 
     private static async Task<ActivityPlannedContextResponse?> ReadPlannedContextAsync(
@@ -422,6 +502,14 @@ public sealed record ActivityPlannedContextResponse(
     decimal? SessionRpe,
     decimal? SrpeLoad);
 
+public sealed record ActivityRecentComparisonResponse(
+    int WindowDays,
+    int SampleSize,
+    decimal? MinDistanceM,
+    decimal? MaxDistanceM,
+    decimal? MedianPaceSecondsPerKm,
+    decimal? MedianHeartRateBpm);
+
 public sealed record ActivityDetailResponse(
     ActivitySummaryResponse Activity,
     DateTime? StartedAtUtc,
@@ -436,4 +524,5 @@ public sealed record ActivityDetailResponse(
     decimal? ElevationGainM,
     int? LapCount,
     IReadOnlyList<ActivitySourceResponse> Sources,
-    ActivityPlannedContextResponse? PlannedContext);
+    ActivityPlannedContextResponse? PlannedContext,
+    ActivityRecentComparisonResponse? RecentComparison);

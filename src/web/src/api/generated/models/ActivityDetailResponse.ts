@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ActivityPlannedContextResponse } from './ActivityPlannedContextResponse';
+import type { ActivityRecentComparisonResponse } from './ActivityRecentComparisonResponse';
 import type { ActivitySourceResponse } from './ActivitySourceResponse';
 import type { ActivitySummaryResponse } from './ActivitySummaryResponse';
 export type ActivityDetailResponse = {
@@ -20,5 +21,6 @@ export type ActivityDetailResponse = {
     lapCount: number | string | null;
     sources: Array<ActivitySourceResponse>;
     plannedContext: (null | ActivityPlannedContextResponse);
+    recentComparison: (null | ActivityRecentComparisonResponse);
 };
 

@@ -10,6 +10,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 export type { ActivityDetailResponse } from './models/ActivityDetailResponse';
 export type { ActivityPageResponse } from './models/ActivityPageResponse';
 export type { ActivityPlannedContextResponse } from './models/ActivityPlannedContextResponse';
+export type { ActivityRecentComparisonResponse } from './models/ActivityRecentComparisonResponse';
 export type { ActivitySamplesReviewResponse } from './models/ActivitySamplesReviewResponse';
 export type { ActivitySourceResponse } from './models/ActivitySourceResponse';
 export type { ActivitySummaryResponse } from './models/ActivitySummaryResponse';

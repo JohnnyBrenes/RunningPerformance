@@ -8,6 +8,8 @@ import { readableApiError } from '../lib/api'
 import { formatPace } from '../lib/dashboard'
 import { buildPlannedComparison } from '../lib/plannedComparison'
 import type { PlannedComparisonRow, RpeStatus } from '../lib/plannedComparison'
+import { buildRecentComparison } from '../lib/recentComparison'
+import type { PaceTrend, RecentComparisonRow } from '../lib/recentComparison'
 
 type Period = 'all' | 'month' | 'quarter' | 'semester' | 'year' | 'custom'
 
@@ -146,6 +148,7 @@ export function ActivitiesPage() {
         <p>{new Date(selected.data.activity.startedAtLocal).toLocaleString('es')} · {selected.data.activity.modality ?? 'modalidad ND'}</p>
         <div className="metric-row compact-metrics"><div><span>Distancia</span><strong>{distance(selected.data.activity.distanceM)}</strong></div><div><span>Duración</span><strong>{duration(selected.data.activity.durationSeconds)}</strong></div><div><span>Ritmo</span><strong>{formatPace(selected.data.activity.averagePaceSecondsPerKm)}</strong></div><div><span>FC media</span><strong>{selected.data.activity.averageHeartRateBpm ?? 'ND'}</strong></div></div>
         <PlannedComparison detail={selected.data} />
+        <RecentComparison detail={selected.data} />
         <details><summary>Origen de los datos</summary><ul>{selected.data.sources.map((source, index) => <li key={`${source.id}-${index}`}>{source.sourceClass} · {source.originalName ?? 'archivo ND'} · fila {source.sourceRowNumber ?? 'ND'}</li>)}</ul></details>
       </> : null}
     </section>}
@@ -203,4 +206,33 @@ function plannedDate(value: string): string {
   const formatted = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' })
     .format(new Date(`${value}T12:00:00`))
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+function RecentComparison({ detail }: { detail: ActivityDetailResponse }) {
+  const comparison = detail.recentComparison
+  const view = useMemo(
+    () => comparison == null ? null : buildRecentComparison(detail.activity, comparison),
+    [detail.activity, comparison],
+  )
+  if (view == null) return null
+
+  return <section className="planned-comparison recent-comparison" aria-labelledby="recent-comparison-heading">
+    <div className="card-top"><div><span className="section-label">Comparación con tu historial</span><h3 id="recent-comparison-heading">{view.sampleSize} sesiones parecidas</h3></div></div>
+    <p className="planned-objective">Sesiones de la misma modalidad y entre {view.distanceBand}, en los {view.windowDays} días previos a esta.</p>
+    <dl>{view.rows.map((row) => <RecentRow key={row.metric} row={row} />)}</dl>
+    {view.rows.some((row) => row.metric === 'heartRate') && <small>La frecuencia cardíaca se muestra como observación: en este método no define qué tan exigente fue la sesión mientras no esté validada.</small>}
+  </section>
+}
+
+function RecentRow({ row }: { row: RecentComparisonRow }) {
+  return <div>
+    <dt>{row.label}</dt>
+    <dd><strong>{row.actual}</strong><span>mediana {row.median}</span>{row.trend != null && <em>{paceTrendLabels[row.trend]}</em>}</dd>
+  </div>
+}
+
+const paceTrendLabels: Record<PaceTrend, string> = {
+  faster: 'más rápido que lo habitual',
+  similar: 'como lo habitual',
+  slower: 'más lento que lo habitual',
 }

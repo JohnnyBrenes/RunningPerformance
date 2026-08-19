@@ -565,6 +565,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--forest-soft); ba
 .planned-comparison dd span { color: #9db9b0; font-size: .72rem; }
 .planned-comparison dd em { border-radius: 999px; background: rgba(255,255,255,.14); padding: .2rem .5rem; font-size: .6rem; font-style: normal; font-weight: 800; }
 .planned-comparison small { display: block; margin-top: .7rem; color: #9db9b0; font-size: .66rem; line-height: 1.5; }
+.recent-comparison { margin-top: 1rem; }
 .activity-table { min-width: 850px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; }
 .pagination button:disabled { color: #aeb3aa; cursor: default; }
